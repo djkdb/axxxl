@@ -13,9 +13,13 @@
 
 ## 실행
 
+- 팀 링크: https://axxxl.tjdwns2121.workers.dev (로그인 없이 이름만 고르면 돼요)
+
 ```sh
-sh build.sh        # dist/index.html 생성
-open dist/index.html
+npm install
+npm run db:migrate:local && npm run dev   # 로컬 Worker + D1
+npm run deploy                            # Cloudflare에 배포 (build.sh 자동 실행)
+npx wrangler secret put ANTHROPIC_API_KEY # AI 구체화 키 등록
 ```
 
-원본은 `artifact.html` 하나예요. 팀 공유·투표는 claude.ai Artifact에서 열 때만 동작해요. 자세한 내용은 `CLAUDE.md`를 보세요.
+원본은 `artifact.html` 하나예요. claude.ai Artifact에서 열면 Artifact 저장소를, Worker 링크로 열면 D1을 써요. 자세한 내용은 `CLAUDE.md`를 보세요.

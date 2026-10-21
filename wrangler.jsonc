@@ -1,0 +1,27 @@
+{
+  // 공공AX 아이디어 랩: dist/(정적) + /api/*(D1 공유 저장, AI 구체화)
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "axxxl",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-10-01",
+  "build": { "command": "sh build.sh" },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "axxxl",
+      "database_id": "4675ff2b-40bd-4bbd-a90c-8fb17ba03284",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "MEMBERS": "주연서,이성준,구민정,김동현,박수홍",
+    "AI_DAILY_LIMIT": "60"
+  },
+  "observability": { "enabled": true }
+  // ANTHROPIC_API_KEY는 시크릿: npx wrangler secret put ANTHROPIC_API_KEY
+}

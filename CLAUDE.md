@@ -8,8 +8,11 @@ TEAM AXXXL(청년 공공AX 서포터즈)이 2차 활동 「AI를 활용한 공�
 
 ## 파일 구조
 
-- `artifact.html` — **원본(이 파일만 수정)**. claude.ai Artifact 형식이라 `<!doctype>/<html>/<head>/<body>` 없이 `<title>`, `<style>`, 마크업, `<script>`가 바로 이어진다. 빌드 도구 없음, 바닐라 JS 한 파일.
-- `build.sh` — `artifact.html`을 감싸서 `dist/index.html`(독립 실행용)을 만든다. Cloudflare Pages: 빌드 명령 `sh build.sh`, 출력 폴더 `dist`.
+- `artifact.html` — **원본(프론트는 이 파일만 수정)**. claude.ai Artifact 형식이라 `<!doctype>/<html>/<head>/<body>` 없이 `<title>`, `<style>`, 마크업, `<script>`가 바로 이어진다. 빌드 도구 없음, 바닐라 JS 한 파일.
+- `build.sh` — `artifact.html`을 감싸서 `dist/index.html`(독립 실행용)을 만든다. Pretendard 폰트 링크도 여기서만 넣는다(Artifact 쪽은 IBM Plex Sans KR로 대체).
+- `worker/index.js` — Cloudflare Worker. `/api/*`는 D1 공유 저장 + AI 구체화, 나머지 경로는 `dist/` 정적 파일.
+- `migrations/` — D1 스키마. 바꿀 땐 새 번호 파일을 추가하고 `npm run db:migrate`.
+- `wrangler.jsonc` — Worker 설정(D1 바인딩 `DB`, `MEMBERS`, `AI_DAILY_LIMIT`). 배포 시 `sh build.sh`가 자동 실행된다.
 - `docs/` — 계획서 양식.
 
 ## 화면(탭) 구성
@@ -22,24 +25,46 @@ hash 토큰: `#map`, `#spin`, `#board`, `#plan`, `#doc`
 4. 역할·일정 — `ROLES` 담당자 지정, `TIMELINE` 체크, 상단 "지금 할 일" 바(`renderNow`)
 5. 계획서 정리 — 1위(또는 선택) 아이디어를 계획서 1·2·4·5번 + 실행계획 문구로 출력
 
-## 런타임 의존성 (중요)
+## 저장 방식 (중요)
 
-공유 저장은 claude.ai Artifact 런타임의 `window.claude.use(...)`에 기대고 있다.
+프론트는 시작할 때 저장 방식(`mode`)을 고른다. 쓰기는 모두 `B`(add/update/del/vote/plan) 객체를 거친다.
 
-- `db` — 공유 문서 DB
-  - `ideas/<autoId>`: `{author, title, who, desc, better, ai, aiHow, core[], domain, type, data, createdAt, authorId, checks:{data,ai,scope}, draft?}`
-  - `votes/<userId>`: `{picks:[ideaId…최대3], at}` — 규칙: `votes` read view / write owner, `votes/{self}` write interact
-  - `plan/main`: `{roles:{case,func,data,ui,doc}, done:{i0..i7}, at}`
-- `user` — `id()`, `isOwner()`, `can("data.write")`
-- `sample` — AI 구체화 버튼 (보는 사람 본인의 Claude 사용량 사용)
+1. `claude` — `window.claude.use("db")`가 있으면 기존 Artifact 런타임 사용
+   - `ideas/<autoId>`, `votes/<userId>`(사용자 ID 기준 3표), `plan/main`
+   - `sample`로 AI 구체화(보는 사람 본인의 Claude 사용량)
+2. `api` — `window.claude`가 없고 `GET /api/state`가 응답하면 Cloudflare Worker + D1 사용
+   - 로그인 없이 링크만으로 사용. 투표는 상단 "나는 [이름]" 선택(`MEMBERS`) 기준 1인 3표, 이름은 localStorage `axlab.name`
+   - 5초마다(탭이 보일 때만) `/api/state`를 다시 읽어 팀원 변경을 반영
+   - AI 구체화는 `POST /api/draft` → Worker가 프롬프트를 조립해 Claude API 호출. 키는 Worker 시크릿 `ANTHROPIC_API_KEY`에만 있다. **프론트에 키를 넣지 말 것.** 하루 호출 상한 `AI_DAILY_LIMIT`(KST 기준)
+3. `local` — 둘 다 안 되면 이 브라우저 메모리에만 저장(공유 안 됨)
 
-`window.claude`가 없으면(= `dist/index.html`을 Cloudflare 등에 올려서 열면) **localMode**로 돌아간다: 아이디어·투표가 그 브라우저 메모리에만 있고 팀원과 공유되지 않으며, AI 구체화도 꺼진다. 독립 배포에서도 팀 공유가 필요하면 `init` 블록과 `db.collection/doc` 호출부를 Supabase나 Cloudflare D1/KV + Worker로 옮겨야 한다. AI 구체화는 서버 쪽(Worker)에서 API 키를 숨긴 채 호출할 것. 키를 프론트엔드 코드에 넣지 말 것.
+### Worker API
+
+| 메서드 | 경로 | 내용 |
+|---|---|---|
+| GET | `/api/state` | `{ideas, votes:{이름:[id…]}, plan, members, ai}` |
+| POST | `/api/ideas` | 아이디어 추가 (author는 MEMBERS 중 하나) |
+| PATCH | `/api/ideas/:id` | 필드 수정, `checks`는 병합 |
+| DELETE | `/api/ideas/:id` | 삭제 + 모든 투표에서 제거 |
+| PUT | `/api/votes/:이름` | `{picks}` 최대 3개, 없는 id는 버림 |
+| PUT | `/api/plan` | `{roles, done}` |
+| POST | `/api/draft` | 조합 필드 → 아이디어 3개 (`claude-opus-5-5`, JSON 스키마 출력) |
+
+쓰기 요청은 같은 출처(Origin)만 받는다. D1 테이블: `ideas`, `votes`, `plan` + 호출 수 세는 `ai_usage`.
 
 ## 현재 배포
 
-- claude.ai Artifact(팀 공유·투표가 실제로 동작하는 버전): https://claude.ai/artifact/FNmGFLi2zYmcL91ZiCcP7P
+- Cloudflare Worker(링크만으로 팀 공유·투표): https://axxxl.tjdwns2121.workers.dev
+  - 배포: `npm run deploy` (D1 `axxxl`, APAC)
+  - AI 키 등록/교체: `npx wrangler secret put ANTHROPIC_API_KEY`
+  - 로컬: `npm run db:migrate:local && npm run dev`
+- claude.ai Artifact(기존 버전): https://claude.ai/artifact/FNmGFLi2zYmcL91ZiCcP7P
   - 팀원이 쓰려면 Share 메뉴에서 이메일로 Editor 초대 필요(공개 링크만으로는 읽기 전용).
-  - `artifact.html`을 수정한 뒤 이 Artifact에 다시 게시하면 같은 링크에 반영된다.
+  - 두 배포는 저장소가 달라서 데이터가 섞이지 않는다. 팀에는 한 링크만 안내할 것.
+
+## 디자인 방향
+
+범정부 UI/UX 디자인 시스템(KRDS) 톤: 네이비 상단 띠, 파랑 `--accent`(#256ef4), 흰 카드 + 12px 라운드 + 옅은 그림자, Pretendard. 팀 보드 카드는 GitLab 이슈 카드처럼 `#번호`, 분야 scoped 라벨, 검토 진행 막대.
 
 ## 작업 규칙
 

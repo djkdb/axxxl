@@ -1,0 +1,19 @@
+{
+  "name": "axxxl",
+  "version": "1.0.0",
+  "description": "청년 공공AX 서포터즈 2차 활동(AI를 활용한 공공서비스 개발계획 수립)용 팀 아이디어 웹앱이에요.",
+  "scripts": {
+    "build": "sh build.sh",
+    "dev": "wrangler dev",
+    "db:migrate": "wrangler d1 migrations apply axxxl --remote",
+    "db:migrate:local": "wrangler d1 migrations apply axxxl --local",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.151.3"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.137.0"
+  },
+  "private": true
+}
