@@ -6,7 +6,7 @@ const MAX_IDEAS = 200;
 const MAX_BODY = 32 * 1024;
 const DOMAIN_IDS = ["welfare","health","traffic","safety","env","youth","edu","admin","culture","life","pet","house"];
 const CHECK_KEYS = ["data", "ai", "scope"];
-const ROLE_KEYS = ["case", "func", "data", "ui", "doc"];
+const ROLE_KEYS = ["pm", "user", "case", "func", "ai", "data", "ui", "tech", "risk", "doc", "present"];
 const MODEL = "claude-opus-5-5";
 
 const json = (body, status = 200) =>
