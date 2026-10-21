@@ -1,0 +1,928 @@
+<title>공공AX 아이디어 랩</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 행정 서식 같은 괘선 바탕 위에, 도장(seal) 모양 분야 표식과 민원 번호표 모양 결과 카드. 4단계 탭. */
+:root{
+  --paper:#f3f5f9; --card:#ffffff; --ink:#18202f; --muted:#5d6779; --line:#d7dce6; --soft:#e9edf4;
+  --accent:#2346a8; --accent-ink:#ffffff; --stamp:#cf3a2b; --ok:#2f8a4f;
+  --c1:#d9822b; --c2:#d64f6a; --c3:#2f7fd1; --c4:#c39a1c; --c5:#3a9a5b; --c6:#7b5bd6;
+  --c7:#2a9d9d; --c8:#5b6b8c; --c9:#c75fb0; --c10:#a0703a; --c11:#e0634a; --c12:#6c8f2f;
+  --display:"Do Hyeon","IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#11141b; --card:#191e29; --ink:#e8ebf2; --muted:#9aa3b5; --line:#2b3242; --soft:#212838;
+  --accent:#8ea6ff; --accent-ink:#0f1630; --stamp:#ff6b5a; --ok:#5cc982; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#11141b; --card:#191e29; --ink:#e8ebf2; --muted:#9aa3b5; --line:#2b3242; --soft:#212838;
+  --accent:#8ea6ff; --accent-ink:#0f1630; --stamp:#ff6b5a; --ok:#5cc982; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;
+  background-image:linear-gradient(var(--soft) 1px,transparent 1px);background-size:100% 32px}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 64px}
+h1,h2,h3{text-wrap:balance;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:flex-end;justify-content:space-between;padding-bottom:16px;border-bottom:2px solid var(--ink)}
+.brand .eyebrow{font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.brand h1{font-family:var(--display);font-weight:400;font-size:clamp(30px,5vw,44px);line-height:1.1;letter-spacing:-.01em}
+.brand p{margin:6px 0 0;color:var(--muted);max-width:56ch}
+.sched{display:flex;gap:8px;flex-wrap:wrap}
+.sched .s{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px 12px;min-width:132px}
+.sched .s b{display:block;font-family:var(--display);font-weight:400;font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums}
+.sched .s span{font-size:12px;color:var(--muted)}
+.sched .s.now{border-color:var(--stamp)}
+.sched .s.now b{color:var(--stamp)}
+
+/* tabs */
+.tabs{display:flex;gap:0;margin:18px 0 22px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card)}
+.tabs button{flex:1;border:0;background:transparent;padding:12px 8px;font-weight:600;color:var(--muted);border-right:1px solid var(--line);display:flex;gap:8px;justify-content:center;align-items:center;min-width:0}
+.tabs button:last-child{border-right:0}
+.tabs button .n{font-family:var(--mono);font-size:12px;border:1px solid currentColor;border-radius:50%;width:22px;height:22px;display:inline-grid;place-items:center;flex:none}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+@media (max-width:560px){.tabs button .lbl{font-size:13px}.tabs button{flex-direction:column;gap:2px;padding:9px 4px}}
+
+.sec-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:14px}
+.sec-head h2{font-family:var(--display);font-weight:400;font-size:28px}
+.sec-head p{margin:2px 0 0;color:var(--muted)}
+.note{font-size:13px;color:var(--muted)}
+
+/* seal */
+.seal{--dc:var(--c1);width:44px;height:44px;border-radius:50%;border:2.5px solid var(--dc);color:var(--dc);display:grid;place-items:center;font-family:var(--display);font-size:17px;flex:none;background:var(--card);transform:rotate(-8deg)}
+.seal.sm{width:30px;height:30px;font-size:12px;border-width:2px}
+
+/* map */
+.map{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.map{grid-template-columns:1fr}}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{--dc:var(--c1);text-align:left;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,var(--dc) 9%,var(--card));padding:12px;display:flex;flex-direction:column;gap:8px;min-height:128px;transition:transform .15s,border-color .15s}
+.tile:hover{transform:translateY(-2px);border-color:var(--dc)}
+.tile[aria-pressed="true"]{border:2px solid var(--dc);padding:11px;background:color-mix(in srgb,var(--dc) 18%,var(--card))}
+.tile .nm{font-weight:700;font-size:16px}
+.tile .q{font-size:12.5px;color:var(--muted);line-height:1.45}
+.detail{--dc:var(--c1);background:var(--card);border:1px solid var(--line);border-top:6px solid var(--dc);border-radius:8px;padding:18px;position:sticky;top:12px}
+.detail h3{font-family:var(--display);font-weight:400;font-size:26px}
+.detail .hq{font-size:15px;margin:4px 0 12px;color:var(--ink)}
+.detail h4{margin:16px 0 6px;font-size:12px;letter-spacing:.06em;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;background:var(--paper)}
+.detail ul{margin:0;padding-left:18px}
+.detail li{margin:2px 0}
+.api{display:grid;gap:6px}
+.api div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding-bottom:5px;font-size:13.5px}
+.api small{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
+.seed{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--soft)}
+.seed p{margin:0;flex:1;font-size:14px}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+
+.btn{border:1px solid var(--ink);background:var(--card);border-radius:6px;padding:8px 14px;font-weight:600;font-size:14px}
+.btn:hover{background:var(--soft)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.sm{padding:4px 10px;font-size:12.5px;font-weight:600}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.link{border:0;background:none;color:var(--accent);font-weight:600;padding:0;font-size:13px;white-space:nowrap}
+
+.ai-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}
+@media (max-width:860px){.ai-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:440px){.ai-grid{grid-template-columns:1fr}}
+.aic{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px}
+.aic b{display:block;margin-bottom:4px}
+.aic p{margin:0;font-size:12.5px;color:var(--muted)}
+.aic .k{font-family:var(--mono);font-size:11px;color:var(--accent);display:block;margin-top:6px}
+
+/* spinner */
+.machine{background:var(--ink);color:var(--paper);border-radius:12px;padding:18px}
+.reels{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+@media (max-width:900px){.reels{grid-template-columns:1fr}}
+.reel{background:var(--card);color:var(--ink);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.reel .lab{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.reel .win{min-height:64px;display:flex;align-items:center;font-weight:700;font-size:16px;line-height:1.35;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);padding:6px 0;overflow-wrap:anywhere}
+.reel.spinning .win{color:var(--muted);filter:blur(.4px)}
+.reel.locked{outline:2px solid var(--stamp)}
+.lock{border:1px solid var(--line);background:var(--paper);border-radius:4px;font-size:11.5px;padding:1px 8px}
+.reel.locked .lock{background:var(--stamp);border-color:var(--stamp);color:#fff}
+.reel select{width:100%;border:1px solid var(--line);border-radius:4px;background:var(--paper);font-size:12.5px;padding:3px}
+.mrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:14px}
+.mrow .note{color:color-mix(in srgb,var(--paper) 70%,transparent)}
+.pull{background:var(--stamp);color:#fff;border:0;border-radius:8px;padding:12px 28px;font-family:var(--display);font-size:22px;letter-spacing:.02em}
+.pull:active{transform:translateY(1px)}
+
+.ticket{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:10px;display:grid;grid-template-columns:150px minmax(0,1fr)}
+@media (max-width:640px){.ticket{grid-template-columns:1fr}}
+.stub{border-right:2px dashed var(--line);padding:16px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:4px}
+@media (max-width:640px){.stub{border-right:0;border-bottom:2px dashed var(--line);flex-direction:row;justify-content:space-between}}
+.stub small{font-size:11px;color:var(--muted);letter-spacing:.08em}
+.stub b{font-family:var(--display);font-weight:400;font-size:44px;line-height:1;font-variant-numeric:tabular-nums}
+.tbody{padding:18px;min-width:0}
+.tbody .hmw{font-family:var(--display);font-weight:400;font-size:clamp(20px,3vw,26px);line-height:1.35}
+.tbody .sum{margin:8px 0 0;color:var(--muted)}
+.qs{margin:12px 0 0;padding:12px 14px;background:var(--paper);border-radius:6px;font-size:13.5px}
+.qs b{display:block;font-size:12px;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+.qs ol{margin:0;padding-left:18px}
+.hint{font-size:13px;margin-top:10px;padding:8px 12px;border-left:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--card))}
+
+.drafts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+@media (max-width:900px){.drafts{grid-template-columns:1fr}}
+.draft{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.draft h4{margin:0;font-size:17px}
+.draft .tg{font-size:12px;color:var(--muted)}
+.draft dl{margin:4px 0 0;display:grid;gap:4px;font-size:13px}
+.draft dt{font-weight:700;font-size:12px;color:var(--muted)}
+.draft dd{margin:0}
+.thinking{margin-top:14px;padding:14px;border:1px dashed var(--line);border-radius:8px;color:var(--muted);background:var(--card)}
+
+/* board */
+.board-top{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.board-top{grid-template-columns:1fr}}
+form.add{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:10px}
+form.add h3{font-size:17px}
+.f{display:grid;gap:3px}
+.f label{font-size:12px;font-weight:600;color:var(--muted)}
+.f input,.f select,.f textarea{border:1px solid var(--line);border-radius:5px;background:var(--paper);padding:7px 9px;width:100%;min-width:0}
+.f textarea{min-height:72px;resize:vertical}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.banner{font-size:13px;padding:10px 12px;border-radius:6px;background:color-mix(in srgb,var(--c4) 16%,var(--card));border:1px solid color-mix(in srgb,var(--c4) 50%,var(--line))}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;align-items:center}
+.fchip{--dc:var(--muted);border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 11px;font-size:12.5px;display:inline-flex;gap:6px;align-items:center}
+.fchip i{width:8px;height:8px;border-radius:50%;background:var(--dc);display:inline-block}
+.fchip[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.cards{grid-template-columns:1fr}}
+.idea{--dc:var(--c1);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;position:relative;min-width:0}
+.idea.top1::after{content:"1위";position:absolute;top:10px;right:12px;font-family:var(--display);color:var(--stamp);border:2px solid var(--stamp);border-radius:4px;padding:0 6px;transform:rotate(6deg);font-size:15px}
+.idea .hd{display:flex;gap:10px;align-items:flex-start;padding-right:40px}
+.idea h4{margin:0;font-size:16.5px;line-height:1.35}
+.idea .by{font-size:12px;color:var(--muted)}
+.idea p{margin:0;font-size:14px;overflow-wrap:anywhere}
+.meta{display:flex;flex-wrap:wrap;gap:5px}
+.meta span{font-size:11.5px;background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:1px 7px}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.ck{border:1px solid var(--line);background:var(--paper);border-radius:4px;font-size:12px;padding:2px 8px;color:var(--muted)}
+.ck[aria-pressed="true"]{border-color:var(--ok);color:var(--ok);font-weight:700;background:color-mix(in srgb,var(--ok) 10%,var(--card))}
+.ft{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--soft);padding-top:8px}
+.vote{border:1.5px solid var(--stamp);color:var(--stamp);background:transparent;border-radius:999px;padding:3px 12px;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
+.vote[aria-pressed="true"]{background:var(--stamp);color:#fff}
+.empty{border:1.5px dashed var(--line);border-radius:8px;padding:28px;text-align:center;color:var(--muted);background:var(--card)}
+
+/* export */
+.doc{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.doc{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
+.rank{display:grid;gap:6px;margin-top:8px}
+.rank label{display:flex;gap:8px;align-items:center;font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+.rank label b{margin-left:auto;color:var(--stamp);font-variant-numeric:tabular-nums}
+pre.out{white-space:pre-wrap;overflow-wrap:anywhere;font-family:var(--body);font-size:14px;line-height:1.7;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px;margin:0;max-height:70vh;overflow:auto}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:6px;font-size:14px;z-index:20}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<style>
+.team{display:inline-flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12px;border:1.5px solid var(--ink);border-radius:4px;padding:1px 8px;margin-left:6px;letter-spacing:.06em}
+.rv{display:flex;flex-wrap:wrap;gap:5px}
+.rv span{font-size:11.5px;border-radius:4px;padding:1px 7px;border:1px dashed var(--line);color:var(--muted)}
+.rv span.on{border:1px solid var(--ok);color:var(--ok);background:color-mix(in srgb,var(--ok) 9%,var(--card))}
+.idea dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 10px;font-size:13px}
+.idea dt{color:var(--muted);font-weight:600;font-size:12px;white-space:nowrap}
+.idea dd{margin:0;overflow-wrap:anywhere}
+.fsec{font-size:11.5px;font-weight:700;letter-spacing:.06em;color:var(--accent);border-top:1px solid var(--soft);padding-top:8px;margin-top:2px}
+.plan{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.plan{grid-template-columns:1fr}}
+.roles{display:grid;gap:8px}
+.role{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+.role b{display:block;font-size:14.5px}
+.role small{color:var(--muted);font-size:12px}
+.role select{border:1px solid var(--line);border-radius:5px;background:var(--card);padding:6px;width:100%}
+.members{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.members span{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;background:var(--card)}
+.members span.lead{border-color:var(--stamp);color:var(--stamp);font-weight:700}
+.tl{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.tl li{display:grid;grid-template-columns:78px 22px minmax(0,1fr);gap:8px;align-items:start;padding:9px 0;border-bottom:1px dashed var(--line)}
+.tl .dt{font-family:var(--mono);font-size:12.5px;padding-top:2px;font-variant-numeric:tabular-nums}
+.tl input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--ok)}
+.tl .tx b{display:block;font-size:14px}
+.tl .tx span{font-size:12.5px;color:var(--muted)}
+.tl li.key .dt{color:var(--stamp);font-weight:700}
+.tl li.key .tx b::after{content:"제출";margin-left:6px;font-size:11px;color:#fff;background:var(--stamp);border-radius:3px;padding:0 5px;vertical-align:2px}
+.tl li.done .tx b{text-decoration:line-through;color:var(--muted)}
+.tl li.today{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.scope{margin-top:16px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card);font-size:13.5px}
+.scope b{display:block;margin-bottom:4px}
+.scope ul{margin:0;padding-left:18px}
+.tl li.focus .tx b::after{content:"집중";margin-left:6px;font-size:11px;color:var(--accent-ink);background:var(--accent);border-radius:3px;padding:0 5px;vertical-align:2px}
+
+/* v2: now bar, sticky tabs, mobile header */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;box-shadow:0 6px 14px -12px var(--ink)}
+.tabs .sh{display:none}
+.nowbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin-top:16px;padding:12px 16px;border-radius:8px;background:var(--card);border:1.5px solid var(--ink)}
+.nowbar .lab{font-size:12px;font-weight:700;color:var(--stamp)}
+.nowbar b{display:block;font-size:16.5px;line-height:1.35}
+.nowbar span.s2{font-size:13px;color:var(--muted)}
+@media (max-width:560px){
+  .top{gap:12px}
+  .brand p{display:none}
+  .sched{width:100%;flex-wrap:nowrap}
+  .sched .s{min-width:0;flex:1;padding:6px 10px}
+  .sched .s b{font-size:19px}
+  .tabs{margin:12px 0 18px}
+  .tabs .lbl{display:none}
+  .tabs .sh{display:inline;font-size:13px}
+  .tabs button .n{width:20px;height:20px;font-size:11px}
+}
+/* spin */
+mark.slot{background:color-mix(in srgb,var(--accent) 15%,transparent);color:inherit;padding:0 .18em;border-radius:3px}
+.reel select{border:0;background:transparent;color:var(--accent);font-weight:600;padding:2px 0;cursor:pointer}
+.machine{display:flex;flex-direction:column}
+@media (max-width:900px){
+  .machine .mrow{order:-1;margin:0 0 12px}
+  .reel{display:grid;grid-template-columns:72px minmax(0,1fr) auto;align-items:center;gap:4px 10px;padding:8px 10px}
+  .reel .lab{display:contents}
+  .reel .lab span{grid-column:1;grid-row:1}
+  .reel .lab .lock{grid-column:3;grid-row:1}
+  .reel .win{grid-column:2;grid-row:1;min-height:0;border:0;padding:0;font-size:15px}
+  .reel select{grid-column:2/4;grid-row:2;font-size:12px}
+  .reels{gap:6px}
+}
+/* board form */
+details.more{border-top:1px solid var(--soft);padding-top:8px}
+details.more summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--accent);list-style:none}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::before{content:"+ ";}
+details.more[open] summary::before{content:"− ";}
+details.more .inner{display:grid;gap:10px;margin-top:10px}
+.editing{font-size:13px;padding:8px 10px;border-radius:6px;background:color-mix(in srgb,var(--accent) 10%,var(--card));display:flex;justify-content:space-between;gap:8px;align-items:center}
+.ft .acts{display:flex;gap:14px;align-items:center}
+.idea.flash{outline:2px solid var(--accent)}
+</style>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="eyebrow">청년 공공AX 서포터즈 · 2차 활동 <span class="team">TEAM AXXXL</span></div>
+      <h1>공공AX 아이디어 랩</h1>
+      <p>분야를 훑고, 조합을 뽑아 아이디어를 만들고, 팀 보드에 올려 투표한 뒤, 역할을 나눠 계획서 문구로 정리해요.</p>
+    </div>
+    <div class="sched" id="sched"></div>
+  </header>
+  <div class="nowbar" id="nowbar"></div>
+
+  <nav class="tabs" role="tablist" aria-label="단계">
+    <button role="tab" id="t-map" data-tab="map"><span class="n">1</span><span class="lbl">분야 지도</span><span class="sh">지도</span></button>
+    <button role="tab" id="t-spin" data-tab="spin"><span class="n">2</span><span class="lbl">아이디어 뽑기</span><span class="sh">뽑기</span></button>
+    <button role="tab" id="t-board" data-tab="board"><span class="n">3</span><span class="lbl">팀 보드</span><span class="sh">보드</span></button>
+    <button role="tab" id="t-plan" data-tab="plan"><span class="n">4</span><span class="lbl">역할·일정</span><span class="sh">일정</span></button>
+    <button role="tab" id="t-doc" data-tab="doc"><span class="n">5</span><span class="lbl">계획서 정리</span><span class="sh">정리</span></button>
+  </nav>
+
+  <!-- 1. MAP -->
+  <section id="p-map" role="tabpanel">
+    <div class="sec-head">
+      <div><h2>어디가 불편한가요?</h2><p>공공서비스 12개 분야. 분야를 누르면 대상, 자주 나오는 불편, 쓸 수 있는 공공데이터, 아이디어 씨앗이 나와요.</p></div>
+    </div>
+    <div class="map">
+      <div class="tiles" id="tiles"></div>
+      <aside class="detail" id="detail"></aside>
+    </div>
+    <div class="sec-head" style="margin-top:34px">
+      <div><h2>AI는 이렇게 붙일 수 있어요</h2><p>계획서 5번 '구동 방식'과 '완료 판단 기준'을 쓸 때 참고하세요.</p></div>
+    </div>
+    <div class="ai-grid" id="aigrid"></div>
+  </section>
+
+  <!-- 2. SPIN -->
+  <section id="p-spin" role="tabpanel" hidden>
+    <div class="sec-head">
+      <div><h2>조합을 뽑아 보세요</h2><p>마음에 드는 칸은 고정하고 나머지만 다시 뽑을 수 있어요. 칸을 직접 고를 수도 있어요.</p></div>
+    </div>
+    <div class="machine">
+      <div class="reels" id="reels"></div>
+      <div class="mrow">
+        <span class="note">고정한 칸은 그대로 두고 나머지만 바뀌어요.</span>
+        <button class="pull" id="pull">뽑기</button>
+      </div>
+    </div>
+    <div id="result"></div>
+    <div id="drafts"></div>
+  </section>
+
+  <!-- 3. BOARD -->
+  <section id="p-board" role="tabpanel" hidden>
+    <div class="sec-head">
+      <div><h2>팀 아이디어 보드</h2><p>각자 1개 이상 올리고, 한 사람당 3표까지 투표해요. 운영진이 말한 검토 5항목을 채울수록 계획서가 쉬워져요.</p></div>
+      <span class="note" id="who"></span>
+    </div>
+    <div class="board-top">
+      <form class="add" id="addForm" autocomplete="off">
+        <h3 id="formTitle">아이디어 올리기</h3>
+        <div id="permNote"></div>
+        <div id="editNote"></div>
+        <div class="f2">
+          <div class="f"><label for="fAuthor">제안자</label><select id="fAuthor" required></select></div>
+          <div class="f"><label for="fDomain">분야</label><select id="fDomain"></select></div>
+        </div>
+        <div class="f"><label for="fTitle">아이디어명</label><input id="fTitle" maxlength="60" placeholder="예: 쉬운말 복지혜택 찾기 챗봇" required></div>
+        <div class="fsec">검토 5항목 · ①② 만 채워도 올릴 수 있어요</div>
+        <div class="f"><label for="fWho">① 누구를 위한 서비스인가요?</label><input id="fWho" maxlength="80" placeholder="예: 스마트폰이 서툰 70대 어르신" required></div>
+        <div class="f"><label for="fPain">② 어떤 불편이나 문제를 해결하나요?</label><textarea id="fPain" maxlength="400" required></textarea></div>
+        <details class="more" id="more"><summary>③④⑤ 더 채우기 (나중에 누구든 이어서 채울 수 있어요)</summary><div class="inner">
+        <div class="f"><label for="fBetter">③ 기존 서비스와 비교해 무엇이 나아지나요?</label><textarea id="fBetter" maxlength="300" placeholder="예: 복지로는 조건을 직접 읽어야 하지만, 질문 3개로 대상 여부를 알려줌"></textarea></div>
+        <div class="f2">
+          <div class="f"><label for="fAi">④ AI 기능</label><select id="fAi"></select></div>
+          <div class="f"><label for="fType">과제 유형</label><select id="fType"><option>기존 공공서비스 개선</option><option>신규 공공서비스 개발</option></select></div>
+        </div>
+        <div class="f"><label for="fAiHow">④ AI를 어디에, 어떻게 쓰나요?</label><input id="fAiHow" maxlength="160" placeholder="예: 공고문 원문을 LLM으로 요약해 자격·기한만 보여줌"></div>
+        <div class="f"><label for="fCore">⑤ 실제 개발할 핵심 기능 (한 줄에 하나, 2~3개)</label><textarea id="fCore" maxlength="400" placeholder="조건 입력 → 받을 수 있는 혜택 목록&#10;공고문 3줄 요약"></textarea></div>
+        <div class="f"><label for="fData">사용 데이터 / API</label><input id="fData" maxlength="120" placeholder="예: 한국사회보장정보원 중앙부처복지서비스"></div>
+        </div></details>
+        <input type="hidden" id="fDraft">
+        <div class="row" style="margin-top:2px"><button class="btn pri" type="submit" id="fSubmit">보드에 올리기</button><button class="btn" type="reset">비우기</button></div>
+        <div class="note" id="formMsg"></div>
+      </form>
+      <div>
+        <div class="filters" id="filters"></div>
+        <div class="cards" id="cards"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. PLAN -->
+  <section id="p-plan" role="tabpanel" hidden>
+    <div class="sec-head">
+      <div><h2>역할과 팀 내부 일정</h2><p>필요한 역할을 나누고, 제출 전에 함께 검토할 날짜를 잡아 두세요. 바꾸면 팀원 모두에게 바로 반영돼요.</p></div>
+      <button class="btn" id="copyNotice">팀 공지 문구 복사</button>
+    </div>
+    <div class="plan">
+      <div class="panel">
+        <b>역할 분담</b>
+        <div class="note">역할마다 담당자를 골라 주세요.</div>
+        <div class="roles" id="roles" style="margin-top:10px"></div>
+        <div class="members" id="members"></div>
+        <div class="scope"><b>범위 정할 때 기억할 것</b><ul>
+          <li>3차 활동에서 실제로 만들어 공공 GitLab에 올려야 해요. 필수 기능은 2~3개로 줄이세요.</li>
+          <li>팀원 중 개발 경험이 적은 사람도 맡을 수 있는 기능이 있는지 확인하세요.</li>
+          <li>API는 인증키 발급·비용·호출 제한을 먼저 확인하고, 키는 코드에 넣지 마세요.</li>
+        </ul></div>
+      </div>
+      <div class="panel">
+        <b>팀 내부 일정 (제안)</b>
+        <div class="note">끝낸 일정은 체크해 주세요.</div>
+        <ul class="tl" id="tl" style="margin-top:8px"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. DOC -->
+  <section id="p-doc" role="tabpanel" hidden>
+    <div class="sec-head">
+      <div><h2>계획서 문구로 정리</h2><p>투표 결과를 「AI를 활용한 공공서비스 직접개발 계획서」 칸에 맞춰 정리해요. 10월 28일 중간보고 제출에도 그대로 쓸 수 있어요.</p></div>
+    </div>
+    <div class="doc">
+      <div class="panel">
+        <b>최종 아이디어 고르기</b>
+        <div class="note">득표순이에요. 기본값은 1위예요.</div>
+        <div class="rank" id="rank"></div>
+      </div>
+      <div>
+        <div class="row" style="margin:0 0 10px"><button class="btn pri" id="copyDoc">전체 복사</button></div>
+        <pre class="out" id="out"></pre>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const TEAM="AXXXL",LEADER="주연서",MEMBERS=["주연서","이성준","구민정","김동현","박수홍"];
+const DOMAINS=[
+ {id:"welfare",name:"복지·돌봄",code:"복지",c:"--c1",q:"받을 수 있는 혜택이 있는데 몰라서 놓친다",
+  targets:["어르신","장애인","한부모 가정","저소득 가구","보호자·돌봄 가족"],
+  pains:["혜택이 부처·지자체 사이트마다 흩어져 있다","자격 조건 문장이 어려워 내가 대상인지 모르겠다","신청 서류와 절차가 길다"],
+  data:[["중앙부처 복지서비스 정보","한국사회보장정보원"],["공공서비스(혜택) 정보","행정안전부"],["노인복지시설 현황","지자체 표준데이터"]],
+  seeds:["나이·가구·소득 몇 가지만 답하면 받을 수 있는 복지 혜택을 쉬운 말로 알려주는 챗봇","복지 공고문을 사진으로 찍으면 자격·기한·서류를 3줄로 요약해 주는 서비스","돌봄 가족을 위한 동네 돌봄시설·지원사업 한 장 지도"]},
+ {id:"health",name:"의료·건강",code:"의료",c:"--c2",q:"지금 열려 있는 병원·약국을 찾기 어렵다",
+  targets:["영유아 부모","어르신","1인가구","외국인 주민"],
+  pains:["야간·휴일에 문 연 곳을 찾기 어렵다","약 설명서가 어렵고 글씨가 작다","증상에 맞는 진료과를 모르겠다"],
+  data:[["전국 약국·병의원 정보","국립중앙의료원"],["전국 응급의료기관 정보","국립중앙의료원"],["의약품개요정보(e약은요)","식품의약품안전처"]],
+  seeds:["약 봉투를 찍으면 복용법·주의사항을 큰 글씨와 음성으로 알려주는 서비스","증상을 말하면 진료과를 안내하고 지금 문 연 병원을 보여주는 서비스","아이가 아플 때 밤에 갈 수 있는 소아 진료기관 찾기"]},
+ {id:"traffic",name:"교통·이동",code:"교통",c:"--c3",q:"이동 정보를 늦게 알거나 이용하기 어렵다",
+  targets:["교통약자","대학생 통학생","농어촌 주민","관광객"],
+  pains:["버스 배차가 길고 도착 정보가 부정확하다","저상버스·엘리베이터 정보를 찾기 어렵다","공영주차장 빈자리를 알 수 없다"],
+  data:[["버스도착정보(TAGO)","국토교통부"],["전국 주차장 정보 표준데이터","공공데이터포털"],["공공자전거 대여소 정보","지자체"]],
+  seeds:["휠체어 이용자를 위한 저상버스·엘리베이터 우선 경로 안내","통학 시간표를 넣으면 놓치지 않게 버스 출발 알림을 주는 서비스","시골 마을 수요응답형 버스 예약을 말로 하는 음성 서비스"]},
+ {id:"safety",name:"안전·재난",code:"안전",c:"--c4",q:"위급할 때 어디로, 무엇을 해야 할지 모른다",
+  targets:["어르신","외국인 주민","어린이 보호자","현장 공무원"],
+  pains:["재난문자가 짧고 어려워 행동 요령을 모른다","가까운 대피소·쉼터 위치를 모른다","외국어 안내가 부족하다"],
+  data:[["무더위쉼터·한파쉼터 정보","행정안전부"],["민방위 대피시설 정보","행정안전부"],["재난문자방송 발령 현황","행정안전부"]],
+  seeds:["재난문자를 내 위치 기준 행동 요령과 가까운 대피소로 풀어주는 서비스","폭염 날 어르신께 가까운 무더위쉼터를 음성으로 알려주는 서비스","재난문자를 외국인 주민 언어로 쉽게 번역해 주는 서비스"]},
+ {id:"env",name:"환경·기후",code:"환경",c:"--c5",q:"생활 속 환경 정보를 행동으로 옮기기 어렵다",
+  targets:["1인가구","어린이 보호자","전기차 운전자","대학생"],
+  pains:["분리배출 기준이 지역마다 달라 헷갈린다","미세먼지 수치를 봐도 뭘 해야 할지 모른다","전기차 충전소가 고장인지 알 수 없다"],
+  data:[["대기오염정보(에어코리아)","한국환경공단"],["단기예보 조회서비스","기상청"],["전기자동차 충전소 정보","한국환경공단"]],
+  seeds:["쓰레기 사진을 찍으면 우리 동네 기준 분리배출 방법을 알려주는 서비스","미세먼지·날씨를 보고 오늘 아이 바깥활동 가능 여부를 알려주는 알림","전기차 충전소 상태와 이용 후기를 모아 보여주는 서비스"]},
+ {id:"youth",name:"일자리·청년",code:"청년",c:"--c6",q:"청년 정책이 많은데 나한테 맞는 걸 못 찾는다",
+  targets:["취업준비생","대학생","청년 1인가구","경력 단절자"],
+  pains:["정책·지원사업 공고가 너무 많고 조건이 복잡하다","마감일을 놓친다","채용공고와 훈련과정을 따로 찾아야 한다"],
+  data:[["청년정책 정보(온통청년)","한국고용정보원"],["채용정보(고용24)","고용노동부"],["직업훈련과정(HRD-Net)","한국고용정보원"]],
+  seeds:["내 조건을 입력하면 신청 가능한 청년 정책과 마감일을 정리해 주는 서비스","희망 직무를 말하면 관련 채용공고와 무료 훈련과정을 묶어 추천","청년 정책 공고문을 3줄 요약 카드로 바꿔 주는 서비스"]},
+ {id:"edu",name:"교육·학습",code:"교육",c:"--c7",q:"배울 곳은 있는데 정보가 닿지 않는다",
+  targets:["학부모","어르신","다문화 가정","중장년 학습자"],
+  pains:["가정통신문·학사일정 내용을 놓친다","평생학습 강좌를 한곳에서 찾기 어렵다","도서관 소장 여부를 일일이 확인한다"],
+  data:[["급식·학사일정(나이스 교육정보 개방포털)","교육부"],["도서관 정보나루","국립중앙도서관"],["평생학습 강좌 정보","국가평생교육진흥원"]],
+  seeds:["가정통신문을 찍으면 일정·준비물만 뽑아 캘린더에 넣어 주는 서비스","다문화 가정 부모를 위한 학교 안내문 번역·요약","동네 도서관 신착 도서를 관심사에 맞춰 추천"]},
+ {id:"admin",name:"행정·민원",code:"민원",c:"--c8",q:"어떤 민원을 어디서 해야 하는지 모른다",
+  targets:["디지털 취약계층","외국인 주민","소상공인","현장 공무원"],
+  pains:["필요한 서류와 발급처를 모르겠다","법령·조례 문장이 어렵다","전화 문의가 몰려 연결이 안 된다"],
+  data:[["정부24 민원 안내 정보","행정안전부"],["국가법령정보 공동활용 API","법제처"],["습득물 정보 조회","경찰청"]],
+  seeds:["하고 싶은 일을 말하면 필요한 민원 서류와 발급 방법을 단계별로 안내","조례·법령 조항을 쉬운 말로 풀고 근거 조문을 함께 보여주는 서비스","잃어버린 물건을 설명하면 경찰청 습득물 목록에서 비슷한 것을 찾아주는 서비스"]},
+ {id:"culture",name:"문화·관광",code:"문화",c:"--c9",q:"가까운 문화시설과 행사를 몰라서 못 간다",
+  targets:["관광객","어르신","장애인","가족 단위"],
+  pains:["무료·할인 행사 정보가 흩어져 있다","무장애 관광지 정보를 찾기 어렵다","외국인 관광객 안내가 부족하다"],
+  data:[["관광정보 서비스(TourAPI)","한국관광공사"],["공연·전시 정보","한국문화정보원"],["전국 공공체육시설 정보","국민체육진흥공단"]],
+  seeds:["휠체어·유모차로 갈 수 있는 무장애 여행 코스를 짜 주는 서비스","이번 주말 우리 동네 무료 공연·전시를 취향대로 추천","지역 축제 안내를 외국어로 자동 번역해 주는 서비스"]},
+ {id:"life",name:"생활·지역경제",code:"생활",c:"--c10",q:"동네 생활 정보가 필요할 때 찾기 어렵다",
+  targets:["소상공인","전통시장 상인","1인가구","어르신"],
+  pains:["창업 전 상권 정보를 보기 어렵다","지역화폐 가맹점을 찾기 어렵다","공중화장실 같은 생활시설 위치를 모른다"],
+  data:[["상가(상권) 정보","소상공인시장진흥공단"],["전국 전통시장 표준데이터","공공데이터포털"],["공중화장실 정보 표준데이터","공공데이터포털"]],
+  seeds:["업종과 동네를 넣으면 경쟁 점포 수와 상권 특징을 요약해 주는 서비스","전통시장 상점 정보와 오늘의 할인을 말로 등록하는 상인용 서비스","산책·나들이용 공중화장실·쉼터 지도"]},
+ {id:"pet",name:"반려동물",code:"반려",c:"--c11",q:"유기동물·반려 생활 정보가 흩어져 있다",
+  targets:["반려인","입양 희망자","보호소 봉사자","지자체 담당자"],
+  pains:["잃어버린 반려동물을 찾을 방법이 막막하다","입양 가능한 동물 정보를 보기 어렵다","동반 가능한 시설을 모른다"],
+  data:[["구조동물 조회 서비스","농림축산식품부 농림축산검역본부"],["동물병원 정보 (지방행정 인허가)","행정안전부"],["반려동물 동반 가능 문화시설","한국문화정보원"]],
+  seeds:["잃어버린 반려동물 사진을 올리면 보호소 구조동물 중 닮은 개체를 찾아주는 서비스","입양 희망 조건에 맞는 보호소 동물을 추천","반려동물과 갈 수 있는 공공시설 지도"]},
+ {id:"house",name:"주거·부동산",code:"주거",c:"--c12",q:"집을 구할 때 정보가 어렵고 위험을 모른다",
+  targets:["청년 1인가구","신혼부부","대학생 자취생","어르신"],
+  pains:["전세사기 위험을 미리 알기 어렵다","공공임대 공고를 놓친다","계약서·등기 용어가 어렵다"],
+  data:[["아파트·연립 전월세 실거래가","국토교통부"],["건축물대장 정보","국토교통부"],["분양·임대 공고 조회","한국토지주택공사(LH)"]],
+  seeds:["집 주소를 넣으면 실거래가·건축물대장으로 전세 위험 신호를 알려주는 서비스","내 조건에 맞는 공공임대 공고를 알림으로 받는 서비스","임대차 계약서를 찍으면 놓치기 쉬운 조항을 짚어 주는 서비스"]}
+];
+const AIS=[
+ {n:"챗봇 상담",how:"공공데이터를 검색해 찾은 근거로 LLM이 답변 (RAG)",done:"질문 10개 중 근거 링크와 함께 정답 8개 이상"},
+ {n:"쉬운말 요약",how:"공고문·법령 원문을 LLM으로 3줄 요약 + 쉬운 단어로 바꿈",done:"요약에 기한·대상·서류가 빠짐없이 들어감"},
+ {n:"사진 인식",how:"사진을 비전 모델/OCR로 읽어 글자·물체를 추출",done:"샘플 사진 20장 중 16장 이상 올바르게 인식"},
+ {n:"맞춤 추천",how:"사용자 조건과 데이터 항목을 매칭해 점수 순으로 정렬",done:"조건을 바꾸면 결과가 바뀌고 추천 이유가 표시됨"},
+ {n:"음성 안내",how:"음성 인식(STT)으로 질문 받고 음성 합성(TTS)으로 답변",done:"말로 질문해 3단계 안에 원하는 정보에 도달"},
+ {n:"다국어 번역",how:"공공 안내문을 LLM 번역 + 용어집으로 고유명사 고정",done:"3개 언어에서 핵심 정보가 원문과 일치"},
+ {n:"서식 자동작성",how:"대화로 받은 정보를 신청서 양식 칸에 채워 넣음",done:"필수 항목이 모두 채워진 신청서 초안이 나옴"},
+ {n:"예측·알림",how:"공공데이터 시계열로 위험·혼잡을 예측해 알림",done:"설정한 조건이 되면 정해진 시간 안에 알림 발송"}
+];
+const GEN_TARGETS=["디지털 취약계층","외국인 주민","대학생","청년 1인가구","어르신"];
+const SITUATIONS=["정보가 여러 사이트에 흩어져 있어서","안내 문장이 어려워 이해하기 힘들어서","내가 대상인지 스스로 판단하기 어려워서","신청 절차가 길고 서류가 많아서","실시간 정보를 늦게 알아서","가까운 시설을 찾기 어려워서","문의 전화가 연결되지 않아서","외국어·쉬운말 안내가 없어서","마감·기한을 자주 놓쳐서"];
+const ROLES=[
+ {k:"case",n:"기존 사례 조사",d:"계획서 3번 · 비슷한 공공서비스 2개의 불편과 참고할 점"},
+ {k:"func",n:"기능 구체화",d:"계획서 4·5번 · 필수/선택 기능, 구동 방식, 완료 기준"},
+ {k:"data",n:"데이터·API 확인",d:"계획서 1번 · 제공 여부, 인증키, 비용, 호출 제한"},
+ {k:"ui",n:"UI 설계",d:"계획서 6번 · 첫 화면, 주요 기능 화면, 결과 화면"},
+ {k:"doc",n:"계획서 작성·취합",d:"양식 정리, 중간보고·최종 제출"}
+];
+const TIMELINE=[
+ {d:"10.21 수",dt:[2026,9,21],t:"킥오프 · 앱 공유",s:"시험기간이라 틈날 때 분야 지도·뽑기만 둘러보기",tab:"map"},
+ {d:"10.25 일",dt:[2026,9,25],t:"아이디어 올리기 마감",s:"1인 1개 이상, 대상·불편(①②)만 채워도 OK",tab:"board"},
+ {d:"10.26 월",dt:[2026,9,26],t:"투표 + 최종 아이디어 확정 회의",s:"1인 3표 → 상위 2개 비교 후 확정, 역할 분담",tab:"board",focus:1},
+ {d:"10.27 화",dt:[2026,9,27],t:"중간보고 자료 완성",s:"확정 아이디어의 검토 5항목 채우기, 계획서 1·2번 작성",tab:"doc",focus:1},
+ {d:"10.28 수",dt:[2026,9,28],t:"중간보고 · 선정 아이디어 제출",s:"팀장 제출",tab:"doc",key:1},
+ {d:"10.30 금",dt:[2026,9,30],t:"담당 파트 초안 완료",s:"사례 조사, 기능, 데이터, UI 초안",tab:"plan"},
+ {d:"10.31 토",dt:[2026,9,31],t:"전체 검토 회의",s:"계획서 한 번에 읽고 범위·일관성 점검",tab:"doc"},
+ {d:"11.01 일",dt:[2026,10,1],t:"최종 계획서 제출",s:"「AI를 활용한 공공서비스 직접개발 계획서」",tab:"doc",key:1}
+];
+const TABNAME={map:"분야 지도",spin:"아이디어 뽑기",board:"팀 보드",plan:"역할·일정",doc:"계획서 정리"};
+function hasB(w){const c=String(w).trim().slice(-1).charCodeAt(0);return c>=0xAC00&&c<=0xD7A3?(c-0xAC00)%28:-1}
+const jo=(w,a,b)=>{const j=hasB(w);return j<0?`${a}(${b})`:j?a:b};
+const ro=w=>{const j=hasB(w);return j<0?"(으)로":(j===0||j===8)?"로":"으로"};
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dom=id=>DOMAINS.find(d=>d.id===id)||DOMAINS[0];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,1900)}
+async function copy(text){try{await navigator.clipboard.writeText(text);toast("복사했어요")}catch(e){toast("복사가 막혀 있어요. 텍스트를 직접 선택해 주세요")}}
+const today=(()=>{const t=new Date();t.setHours(0,0,0,0);return t})();
+
+/* schedule */
+(function(){
+  const items=[["중간보고 · 아이디어 제출","10.28",new Date(2026,9,28)],["최종 계획서 제출","11.01",new Date(2026,10,1)]];
+  let first=true;
+  $("#sched").innerHTML=items.map(([l,d,dt])=>{const diff=Math.round((dt-today)/864e5);
+    const tag=diff>0?`D-${diff}`:diff===0?"D-day":"마감";const now=first&&diff>=0;if(now)first=false;
+    return `<div class="s${now?" now":""}"><b>${tag}</b><span>${d} ${l}</span></div>`}).join("");
+})();
+
+/* tabs */
+const TABS=["map","spin","board","plan","doc"];
+function show(t){if(!TABS.includes(t))t="map";
+  TABS.forEach(x=>{$("#p-"+x).hidden=x!==t;$("#t-"+x).setAttribute("aria-selected",x===t)});
+  try{history.replaceState(null,"","#"+t)}catch(e){}
+  if(t==="doc")renderDoc();
+  window.scrollTo({top:0});
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>show(b.dataset.tab));
+
+/* 1. map */
+let selDomain=DOMAINS[0].id;
+function renderTiles(){
+  $("#tiles").innerHTML=DOMAINS.map(d=>`<button class="tile" style="--dc:var(${d.c})" data-id="${d.id}" aria-pressed="${d.id===selDomain}">
+    <span class="seal sm" style="--dc:var(${d.c})">${d.code}</span><span class="nm">${d.name}</span><span class="q">${d.q}</span></button>`).join("");
+  document.querySelectorAll(".tile").forEach(b=>b.onclick=()=>{selDomain=b.dataset.id;renderTiles();renderDetail();
+    if(matchMedia("(max-width:860px)").matches)$("#detail").scrollIntoView({behavior:"smooth",block:"start"})});
+}
+function renderDetail(){
+  const d=dom(selDomain);const el=$("#detail");el.style.setProperty("--dc",`var(${d.c})`);
+  el.innerHTML=`<div style="display:flex;gap:12px;align-items:center"><span class="seal" style="--dc:var(${d.c})">${d.code}</span><h3>${d.name}</h3></div>
+   <p class="hq">"${d.q}"</p>
+   <h4>누가 불편한가</h4><div class="chips">${d.targets.map(t=>`<span class="chip">${t}</span>`).join("")}</div>
+   <h4>자주 나오는 불편</h4><ul>${d.pains.map(p=>`<li>${p}</li>`).join("")}</ul>
+   <h4>쓸 수 있는 공공데이터·API</h4><div class="api">${d.data.map(([n,o])=>`<div><span>${n}</span><small>${o}</small></div>`).join("")}</div>
+   <p class="note" style="margin:6px 0 0">제공 여부·인증키·비용은 공공데이터포털(data.go.kr)에서 꼭 확인하세요.</p>
+   <h4>아이디어 씨앗</h4>${d.seeds.map((s,i)=>`<div class="seed"><p>${s}</p><button class="link" data-seed="${i}">보드에 올리기</button></div>`).join("")}
+   <div class="row"><button class="btn pri" id="toSpin">이 분야로 뽑기</button></div>`;
+  $("#toSpin").onclick=()=>{reels.domain.val=d.id;reels.domain.locked=true;renderReels();renderResult();show("spin")};
+  el.querySelectorAll("[data-seed]").forEach(b=>b.onclick=()=>prefill({pain:d.seeds[+b.dataset.seed],domain:d.id,data:d.data[0][1]+" "+d.data[0][0]}));
+}
+$("#aigrid").innerHTML=AIS.map(a=>`<div class="aic"><b>${a.n}</b><p>${a.how}</p><span class="k">완료 기준 예: ${a.done}</span></div>`).join("");
+
+/* 2. spin */
+const reels={
+  domain:{lab:"분야",val:"welfare",locked:false},
+  target:{lab:"누구의",val:"어르신",locked:false},
+  sit:{lab:"어떤 불편",val:SITUATIONS[0],locked:false},
+  data:{lab:"어떤 데이터로",val:"",locked:false},
+  ai:{lab:"어떤 AI로",val:AIS[0].n,locked:false}
+};
+reels.data.val=dom("welfare").data[0][0];
+let ticketNo=store.get("axlab.ticket",0);
+function options(k){const d=dom(reels.domain.val);
+  if(k==="domain")return DOMAINS.map(x=>[x.id,x.name]);
+  if(k==="target")return [...new Set([...d.targets,...GEN_TARGETS])].map(x=>[x,x]);
+  if(k==="sit")return SITUATIONS.map(x=>[x,x]);
+  if(k==="data")return d.data.map(x=>[x[0],x[0]+" · "+x[1]]);
+  if(k==="ai")return AIS.map(x=>[x.n,x.n]);}
+function label(k,v){return k==="domain"?dom(v).name:v}
+function renderReels(){
+  const d=dom(reels.domain.val);if(!d.data.some(x=>x[0]===reels.data.val))reels.data.val=d.data[0][0];
+  $("#reels").innerHTML=Object.entries(reels).map(([k,r])=>`<div class="reel${r.locked?" locked":""}" id="r-${k}">
+    <div class="lab"><span>${r.lab}</span><button class="lock" data-lock="${k}" aria-pressed="${r.locked}">${r.locked?"고정됨":"고정"}</button></div>
+    <div class="win" id="w-${k}">${esc(label(k,r.val))}</div>
+    <select id="s-${k}" aria-label="${r.lab} 직접 고르기"><option value="" selected>직접 고르기 ▾</option>${options(k).map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join("")}</select>
+  </div>`).join("");
+  document.querySelectorAll("[data-lock]").forEach(b=>b.onclick=()=>{const r=reels[b.dataset.lock];r.locked=!r.locked;renderReels()});
+  Object.keys(reels).forEach(k=>$("#s-"+k).onchange=e=>{if(!e.target.value)return;reels[k].val=e.target.value;reels[k].locked=true;renderReels();renderResult()});
+}
+let spinning=false;
+$("#pull").onclick=async()=>{
+  if(spinning)return;spinning=true;$("#pull").disabled=true;
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!reels.domain.locked)reels.domain.val=pick(DOMAINS).id;
+  const d=dom(reels.domain.val);
+  if(!reels.target.locked)reels.target.val=Math.random()<.7?pick(d.targets):pick(GEN_TARGETS);
+  if(!reels.sit.locked)reels.sit.val=pick(SITUATIONS);
+  if(!reels.data.locked||!d.data.some(x=>x[0]===reels.data.val))reels.data.val=pick(d.data)[0];
+  if(!reels.ai.locked)reels.ai.val=pick(AIS).n;
+  const keys=Object.keys(reels).filter(k=>!reels[k].locked);
+  if(!reduce){
+    await Promise.all(keys.map((k,i)=>new Promise(res=>{
+      const el=$("#r-"+k),w=$("#w-"+k);el.classList.add("spinning");
+      const pool=k==="domain"?DOMAINS.map(x=>x.name):k==="target"?[...d.targets,...GEN_TARGETS]:k==="sit"?SITUATIONS:k==="data"?DOMAINS.flatMap(x=>x.data.map(y=>y[0])):AIS.map(x=>x.n);
+      const iv=setInterval(()=>w.textContent=pick(pool),70);
+      setTimeout(()=>{clearInterval(iv);el.classList.remove("spinning");w.textContent=label(k,reels[k].val);res()},450+i*230);
+    })));
+  }
+  ticketNo++;store.set("axlab.ticket",ticketNo);
+  renderReels();renderResult();$("#drafts").innerHTML="";
+  spinning=false;$("#pull").disabled=false;
+};
+function combo(){const d=dom(reels.domain.val),ai=AIS.find(a=>a.n===reels.ai.val)||AIS[0];
+  const dd=d.data.find(x=>x[0]===reels.data.val)||d.data[0];
+  return{d,ai,dd,target:reels.target.val,sit:reels.sit.val};}
+function renderResult(){
+  const {d,ai,dd,target,sit}=combo();
+  const hmw=`어떻게 하면 ${target}${jo(target,"이","가")} ${sit} 겪는 불편을 ${ai.n}${ro(ai.n)} 덜어줄 수 있을까?`;
+  $("#result").innerHTML=`<div class="ticket">
+    <div class="stub"><small>번호표</small><b>${String(ticketNo).padStart(3,"0")}</b><span class="seal sm" style="--dc:var(${d.c})">${d.code}</span></div>
+    <div class="tbody">
+      <div class="hmw">어떻게 하면 <mark class="slot">${esc(target)}</mark>${jo(target,"이","가")} ${esc(sit)} 겪는 불편을 <mark class="slot">${esc(ai.n)}</mark>${ro(ai.n)} 덜어줄 수 있을까?</div>
+      <p class="sum">${esc(d.name)} · ${esc(dd[0])} (${esc(dd[1])}) 데이터를 바탕으로</p>
+      <div class="hint"><b>AI 구동 방식 힌트</b> · ${esc(ai.how)}</div>
+      <div class="qs"><b>팀원에게 던질 질문</b><ol>
+        <li>${esc(target)}${jo(target,"은","는")} 지금 이 문제를 어떻게 해결하고 있나요? (전화, 지인, 포기?)</li>
+        <li>이미 있는 공공서비스는 무엇이고, 뭐가 불편한가요? (계획서 3번 기존 사례)</li>
+        <li>AI를 빼면 이 서비스에서 안 되는 게 뭔가요? 없다면 AI 위치를 다시 잡아 보세요.</li>
+        <li>3차 활동 기간 안에 필수 기능 2~3개로 만들 수 있나요?</li>
+      </ol></div>
+      <div class="row">
+        <button class="btn pri" id="aiDraft">AI로 아이디어 3개 구체화</button>
+        <button class="btn" id="toBoard">이 조합 보드에 올리기</button>
+        <button class="btn" id="copyHmw">질문 복사</button>
+      </div>
+    </div></div>`;
+  $("#copyHmw").onclick=()=>copy(hmw);
+  $("#toBoard").onclick=()=>prefill({who:target,pain:`${sit} 불편을 겪는다.`,domain:d.id,ai:ai.n,aiHow:ai.how,data:dd[1]+" "+dd[0]});
+  $("#aiDraft").onclick=runDraft;
+}
+let draftCtl=null,lastDrafts=[];
+async function runDraft(){
+  const box=$("#drafts");const {d,ai,dd,target,sit}=combo();
+  const sample=window.claude?.use?await window.claude.use("sample"):null;
+  if(!sample){box.innerHTML=`<div class="thinking">이 화면에서는 AI 구체화를 쓸 수 없어요. 위 질문으로 팀원들과 직접 아이디어를 넓혀 보세요.</div>`;return}
+  draftCtl?.abort();draftCtl=new AbortController();
+  box.innerHTML=`<div class="thinking">아이디어를 만드는 중이에요. 보통 20~40초 걸려요. <button class="link" id="stopD">멈추기</button></div>`;
+  $("#stopD").onclick=()=>draftCtl.abort();
+  const prompt=`당신은 대학생 팀의 공공서비스 기획을 돕는 멘토입니다.
+아래 조합으로 "AI를 활용한 공공서비스" 아이디어 3개를 한국어로 제안하세요. 세 아이디어는 접근 방식이 서로 달라야 합니다.
+
+- 분야: ${d.name}
+- 대상: ${target}
+- 불편 상황: ${sit} 생기는 불편
+- 활용 데이터 후보: ${dd[0]} (${dd[1]}) — 필요하면 같은 분야의 다른 공공데이터(${d.data.map(x=>x[0]).join(", ")})도 사용 가능
+- AI 기능: ${ai.n} (${ai.how})
+
+제약:
+- 개발 경험이 다양한 대학생 5명 팀이 약 3~4주 안에 웹서비스로 실제 구현해 GitLab에 올릴 수 있는 범위
+- 공공데이터포털 등에서 무료로 받을 수 있는 데이터 위주, 개인정보 수집은 최소화
+- 필수 기능 2~3개, 선택 기능 1~2개
+- 기존 공공서비스 개선이면 무엇을 어떻게 개선하는지 분명히
+
+JSON 배열만 답하세요. 형식:
+[{"name":"서비스명","oneLine":"한 줄 소개","target":"누구를 위한 서비스인지 구체적으로","problem":"해결하려는 불편 한두 문장","type":"기존 공공서비스 개선 또는 신규 공공서비스 개발","existing":"비교 대상 기존 공공서비스와 그 한계","better":"기존 서비스 대비 개선점 한 문장","aiRole":"AI를 어디에, 어떻게 쓰는지 한 문장","data":"사용 데이터/API","must":["필수 기능: 입력→처리→출력 한 줄"],"optional":["선택 기능"],"flow":["① 단계","② 단계","③ 단계"],"risk":"구현 시 주의할 점 한 문장"}]`;
+  try{
+    const res=await sample.json(prompt,{signal:draftCtl.signal,modelTier:"default"});
+    const arr=(Array.isArray(res)?res:[]).filter(x=>x&&x.name).slice(0,3);
+    if(!arr.length)throw{code:"invalid_json"};
+    lastDrafts=arr.map(x=>({...x,_domain:d.id,_ai:ai.n}));
+    box.innerHTML=`<div class="drafts">${lastDrafts.map((x,i)=>`<div class="draft">
+      <span class="tg">${esc(x.type)}</span><h4>${esc(x.name)}</h4><p style="margin:0">${esc(x.oneLine)}</p>
+      <dl><dt>누구를 위한</dt><dd>${esc(x.target)}</dd><dt>해결할 불편</dt><dd>${esc(x.problem)}</dd>
+      <dt>기존 대비 개선</dt><dd>${esc(x.better)}</dd><dt>AI 활용</dt><dd>${esc(x.aiRole)}</dd>
+      <dt>핵심 기능 (필수)</dt><dd>${(x.must||[]).map(esc).join("<br>")}</dd>
+      <dt>선택 기능</dt><dd>${(x.optional||[]).map(esc).join("<br>")}</dd>
+      <dt>이용 흐름</dt><dd>${(x.flow||[]).map(esc).join(" → ")}</dd>
+      <dt>데이터</dt><dd>${esc(x.data)}</dd>
+      <dt>비교할 기존 서비스</dt><dd>${esc(x.existing)}</dd>
+      <dt>주의할 점</dt><dd>${esc(x.risk)}</dd></dl>
+      <div class="row" style="margin-top:6px"><button class="btn sm pri" data-d="${i}">보드에 올리기</button></div></div>`).join("")}</div>
+      <p class="note">AI가 제안한 데이터 이름은 실제와 다를 수 있어요. 공공데이터포털에서 확인한 뒤 올려 주세요.</p>`;
+    box.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{const x=lastDrafts[+b.dataset.d];
+      prefill({title:x.name,who:x.target,pain:x.problem,better:x.better,aiHow:x.aiRole,core:(x.must||[]).join("\n"),domain:x._domain,ai:x._ai,data:x.data,type:x.type,draft:x})});
+  }catch(e){
+    const m=e?.code==="cancelled"?"멈췄어요.":e?.code==="not_granted"?"AI 사용을 허용하지 않아서 구체화를 건너뛰었어요.":e?.code==="rate_limited"?"요청이 많아요. 잠시 뒤 다시 눌러 주세요.":"아이디어를 정리하지 못했어요. 다시 눌러 보세요.";
+    box.innerHTML=`<div class="thinking">${m}</div>`;
+  }
+}
+
+/* 3. board */
+let db=null,user=null,myId=null,isOwner=false,writable=null;
+let ideas=[],votes={},localMode=false,filter="all",plan={roles:{},done:{}};
+$("#fAuthor").innerHTML=`<option value="">이름 선택</option>`+MEMBERS.map(m=>`<option>${m}</option>`).join("");
+$("#fDomain").innerHTML=DOMAINS.map(d=>`<option value="${d.id}">${d.name}</option>`).join("");
+$("#fAi").innerHTML=AIS.map(a=>`<option>${a.n}</option>`).join("")+`<option>기타</option>`;
+$("#fAuthor").value=store.get("axlab.name","");
+const F={title:"fTitle",who:"fWho",pain:"fPain",better:"fBetter",aiHow:"fAiHow",core:"fCore",data:"fData"};
+function prefill(o){
+  for(const [k,id] of Object.entries(F))$("#"+id).value=o[k]||"";
+  $("#fDomain").value=o.domain||"welfare";if(o.ai)$("#fAi").value=o.ai;
+  if(o.type)$("#fType").value=/개선/.test(o.type)?"기존 공공서비스 개선":"신규 공공서비스 개발";
+  $("#fDraft").value=o.draft?JSON.stringify(o.draft):"";
+  setEditing(null);$("#more").open=!!(o.better||o.aiHow||o.core||o.data);
+  show("board");
+  const firstEmpty=["fAuthor","fTitle","fWho","fPain","fBetter","fCore"].find(id=>!$("#"+id).value);
+  setTimeout(()=>firstEmpty&&$("#"+firstEmpty).focus(),50);
+  $("#formMsg").textContent="빈 칸을 채우고 올려 주세요.";
+}
+let editingId=null;
+function setEditing(id){
+  editingId=id;const i=ideas.find(x=>x.id===id);
+  $("#formTitle").textContent=id?"아이디어 채우기·수정":"아이디어 올리기";
+  $("#fSubmit").textContent=id?"수정 저장":"보드에 올리기";
+  $("#editNote").innerHTML=id&&i?`<div class="editing"><span>수정 중: <b>${esc(i.title)}</b></span><button type="button" class="link" id="cancelEdit">취소</button></div>`:"";
+  if(id)$("#cancelEdit").onclick=()=>$("#addForm").reset();
+}
+function loadEdit(id){
+  const i=ideas.find(x=>x.id===id);if(!i)return;
+  $("#fAuthor").value=i.author||"";$("#fTitle").value=i.title||"";$("#fWho").value=i.who||"";$("#fPain").value=i.desc||"";
+  $("#fBetter").value=i.better||"";$("#fAiHow").value=i.aiHow||"";$("#fCore").value=(i.core||[]).join("\n");$("#fData").value=i.data||"";
+  $("#fDomain").value=i.domain;$("#fAi").value=i.ai;$("#fType").value=i.type;$("#fDraft").value="";
+  setEditing(id);$("#more").open=true;$("#formMsg").textContent="";
+  $("#addForm").scrollIntoView({behavior:"smooth",block:"start"});
+  const first=["fBetter","fAiHow","fCore"].find(x=>!$("#"+x).value);setTimeout(()=>$("#"+(first||"fTitle")).focus({preventScroll:true}),300);
+}
+$("#addForm").onreset=()=>{$("#fDraft").value="";$("#formMsg").textContent="";setEditing(null);$("#more").open=false;setTimeout(()=>$("#fAuthor").value=store.get("axlab.name",""),0)};
+$("#addForm").onsubmit=async e=>{
+  e.preventDefault();
+  let draft=null;try{draft=$("#fDraft").value?JSON.parse($("#fDraft").value):null}catch(_){}
+  const v=id=>$("#"+id).value.trim();
+  const item={author:v("fAuthor"),title:v("fTitle"),who:v("fWho"),desc:v("fPain"),better:v("fBetter"),ai:$("#fAi").value,aiHow:v("fAiHow"),
+    core:v("fCore").split("\n").map(x=>x.trim()).filter(Boolean).slice(0,6),domain:$("#fDomain").value,type:$("#fType").value,data:v("fData"),
+    createdAt:Date.now(),authorId:myId||"",checks:{data:false,ai:false,scope:false}};
+  if(draft)item.draft=draft;
+  if(!item.author||!item.title||!item.who||!item.desc){$("#formMsg").textContent="제안자, 아이디어명, ①②는 꼭 채워 주세요.";return}
+  store.set("axlab.name",item.author);
+  $("#fSubmit").disabled=true;
+  try{
+    if(editingId){
+      const id=editingId;const {createdAt,authorId,checks,draft:_d,...fields}=item;
+      if(localMode){Object.assign(ideas.find(x=>x.id===id)||{},fields);renderBoard()}
+      else await db.doc("ideas/"+id).update(fields);
+      $("#addForm").reset();toast("수정했어요");
+    }else{
+      if(localMode){item.id="l"+Date.now();ideas.push(item);renderBoard()}
+      else await db.collection("ideas").add(item);
+      $("#addForm").reset();toast("보드에 올렸어요");filter="all";
+    }
+  }catch(err){
+    $("#formMsg").textContent=err?.code==="invalid_argument"?"이 보드에 쓸 권한이 없어요. 이성준에게 편집 권한 초대를 요청해 주세요.":err?.code==="quota_exceeded"?"보드가 가득 찼어요. 오래된 아이디어를 지워 주세요.":"올리지 못했어요. 잠시 뒤 다시 시도해 주세요.";
+  }finally{$("#fSubmit").disabled=false}
+};
+function review(i){return [["대상",!!i.who],["불편",!!i.desc],["기존 대비",!!i.better],["AI 활용",!!i.aiHow],["핵심 기능",(i.core||[]).length>0]]}
+function tally(){const t={};Object.values(votes).forEach(p=>(p||[]).forEach(id=>t[id]=(t[id]||0)+1));return t}
+function myPicks(){return localMode?(votes.me||[]):(votes[myId]||[])}
+function sorted(){const t=tally();return [...ideas].sort((a,b)=>(t[b.id]||0)-(t[a.id]||0)||a.createdAt-b.createdAt)}
+function renderBoard(){
+  const t=tally(),list=sorted(),mine=myPicks();
+  const counts={};ideas.forEach(i=>counts[i.domain]=(counts[i.domain]||0)+1);
+  const posted=new Set(ideas.map(i=>i.author));const missing=MEMBERS.filter(m=>!posted.has(m));
+  $("#filters").innerHTML=`<button class="fchip" data-f="all" aria-pressed="${filter==="all"}">전체 ${ideas.length}</button>`+
+    DOMAINS.filter(d=>counts[d.id]).map(d=>`<button class="fchip" style="--dc:var(${d.c})" data-f="${d.id}" aria-pressed="${filter===d.id}"><i></i>${d.name} ${counts[d.id]}</button>`).join("")+
+    `<span class="note" style="margin-left:auto">${missing.length?"아직 안 올린 사람: "+missing.join(", ")+" · ":"5명 모두 올렸어요 · "}내 투표 ${mine.length}/3</span>`;
+  document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{filter=b.dataset.f;renderBoard()});
+  const shown=list.filter(i=>filter==="all"||i.domain===filter);
+  const topId=list.length&&(t[list[0].id]||0)>0?list[0].id:null;
+  if(!shown.length){$("#cards").innerHTML=`<div class="empty" style="grid-column:1/-1"><b>아직 올라온 아이디어가 없어요</b><br>왼쪽 칸에 첫 아이디어를 적거나, 1·2단계에서 마음에 드는 걸 골라 '보드에 올리기'를 눌러 주세요.</div>`;return}
+  const canVote=localMode||!!myId;
+  $("#cards").innerHTML=shown.map(i=>{const d=dom(i.domain);const c=i.checks||{};const n=t[i.id]||0;const voted=mine.includes(i.id);
+    const canDel=localMode||isOwner||(myId&&i.authorId===myId);const rv=review(i);const filled=rv.filter(x=>x[1]).length;
+    return `<article class="idea${i.id===topId?" top1":""}" style="--dc:var(${d.c})">
+      <div class="hd"><span class="seal sm" style="--dc:var(${d.c})">${d.code}</span><div style="min-width:0"><h4>${esc(i.title)}</h4><div class="by">${esc(i.author)} 제안 · ${d.name} · ${esc(i.type)}</div></div></div>
+      <dl>${i.who?`<dt>누구를</dt><dd>${esc(i.who)}</dd>`:""}<dt>불편</dt><dd>${esc(i.desc)}</dd>
+        ${i.better?`<dt>기존 대비</dt><dd>${esc(i.better)}</dd>`:""}
+        <dt>AI</dt><dd>${esc(i.ai)}${i.aiHow?" · "+esc(i.aiHow):""}</dd>
+        ${(i.core||[]).length?`<dt>핵심 기능</dt><dd>${i.core.map(esc).join("<br>")}</dd>`:""}
+        ${i.data?`<dt>데이터</dt><dd>${esc(i.data)}</dd>`:""}</dl>
+      <div class="rv" title="검토 5항목">${rv.map(([l,ok])=>`<span class="${ok?"on":""}">${ok?"✓":"·"} ${l}</span>`).join("")}<span style="border:0">${filled}/5</span></div>
+      <div class="checks">
+        <button class="ck" data-ck="data" data-id="${i.id}" aria-pressed="${!!c.data}">데이터·API 확인</button>
+        <button class="ck" data-ck="ai" data-id="${i.id}" aria-pressed="${!!c.ai}">AI 없으면 안 됨</button>
+        <button class="ck" data-ck="scope" data-id="${i.id}" aria-pressed="${!!c.scope}">우리 팀이 기간 내 구현 가능</button>
+      </div>
+      <div class="ft"><button class="vote" data-v="${i.id}" aria-pressed="${voted}" ${canVote?"":"disabled"}>★ ${n}</button>
+        <span class="acts"><button class="link" data-edit="${i.id}">${filled<5?"나머지 채우기":"수정"}</button>
+        ${canDel?`<button class="link" data-del="${i.id}" style="color:var(--muted)">삭제</button>`:""}</span></div>
+    </article>`}).join("");
+  document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>toggleVote(b.dataset.v));
+  document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>loadEdit(b.dataset.edit));
+  document.querySelectorAll("[data-ck]").forEach(b=>b.onclick=()=>toggleCheck(b.dataset.id,b.dataset.ck));
+  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
+    if(b.dataset.armed){delIdea(b.dataset.del)}else{b.dataset.armed="1";b.textContent="정말 삭제할까요?";b.style.color="var(--stamp)";setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.textContent="삭제";b.style.color="var(--muted)"}},3000)}});
+}
+let voteBusy=false;
+async function toggleVote(id){
+  if(voteBusy)return;let p=[...myPicks()];
+  if(p.includes(id))p=p.filter(x=>x!==id);else{if(p.length>=3){toast("한 사람당 3표까지예요. 다른 표를 먼저 빼 주세요");return}p.push(id)}
+  if(localMode){votes.me=p;renderBoard();return}
+  voteBusy=true;try{await db.doc("votes/"+myId).set({picks:p,at:Date.now()})}catch(e){toast("투표를 저장하지 못했어요")}finally{voteBusy=false}
+}
+async function toggleCheck(id,k){
+  const i=ideas.find(x=>x.id===id);if(!i)return;const v=!(i.checks||{})[k];
+  if(localMode){i.checks={...(i.checks||{}),[k]:v};renderBoard();return}
+  try{await db.doc("ideas/"+id).update({checks:{[k]:v}})}catch(e){toast("체크를 저장하지 못했어요")}
+}
+async function delIdea(id){
+  if(localMode){ideas=ideas.filter(x=>x.id!==id);renderBoard();return}
+  try{await db.doc("ideas/"+id).delete();toast("삭제했어요")}catch(e){toast("삭제하지 못했어요")}
+}
+
+/* 4. plan */
+let planBusy=false;
+async function savePlan(){
+  if(localMode){renderPlan();return}
+  if(planBusy)return;planBusy=true;
+  try{await db.doc("plan/main").set({roles:plan.roles,done:plan.done,at:Date.now()})}catch(e){toast("저장하지 못했어요")}finally{planBusy=false}
+}
+function renderPlan(){
+  $("#roles").innerHTML=ROLES.map(r=>`<div class="role"><div><b>${r.n}</b><small>${r.d}</small></div>
+    <select id="role-${r.k}" aria-label="${r.n} 담당자"><option value="">미정</option>${MEMBERS.map(m=>`<option${plan.roles[r.k]===m?" selected":""}>${m}</option>`).join("")}</select></div>`).join("");
+  ROLES.forEach(r=>$("#role-"+r.k).onchange=e=>{plan.roles={...plan.roles,[r.k]:e.target.value};savePlan()});
+  const load={};Object.values(plan.roles).forEach(m=>{if(m)load[m]=(load[m]||0)+1});
+  $("#members").innerHTML=MEMBERS.map(m=>`<span class="${m===LEADER?"lead":""}">${m}${m===LEADER?" (팀장)":""} · ${load[m]||0}개</span>`).join("");
+  let marked=false;
+  $("#tl").innerHTML=TIMELINE.map((x,i)=>{const dt=new Date(...x.dt);const isToday=!marked&&dt>=today;if(isToday)marked=true;const done=!!plan.done["i"+i];
+    return `<li class="${x.key?"key ":""}${x.focus?"focus ":""}${done?"done ":""}${isToday?"today":""}"><span class="dt">${x.d}</span><input type="checkbox" id="tl-${i}" ${done?"checked":""} aria-label="${x.t} 완료"><label class="tx" for="tl-${i}"><b>${x.t}</b><span>${x.s}</span></label></li>`}).join("");
+  TIMELINE.forEach((x,i)=>$("#tl-"+i).onchange=e=>{plan.done={...plan.done,["i"+i]:e.target.checked};savePlan()});
+  renderNow();
+}
+function renderNow(){
+  const idx=TIMELINE.findIndex((x,i)=>new Date(...x.dt)>=today&&!plan.done["i"+i]);
+  const el=$("#nowbar");
+  if(idx<0){el.innerHTML=`<div><span class="lab">모든 일정 완료</span><b>3차 활동에서 만나요</b></div>`;return}
+  const x=TIMELINE[idx];const diff=Math.round((new Date(...x.dt)-today)/864e5);
+  el.innerHTML=`<div style="min-width:0"><span class="lab">지금 할 일 · ${x.d} ${diff>0?"(D-"+diff+")":"(오늘)"}</span><b>${x.t}</b><span class="s2">${x.s}</span></div>
+    <button class="btn pri" id="nowGo">${TABNAME[x.tab]}로 가기</button>`;
+  $("#nowGo").onclick=()=>show(x.tab);
+}
+function noticeText(){
+  const roleLines=ROLES.map(r=>`- ${r.n}: ${plan.roles[r.k]||"미정"}`).join("\n");
+  return `[${TEAM} 2차 활동 공지]
+2차 활동은 'AI를 활용한 공공서비스 개발계획 수립'이에요. 3차에서 실제로 개발하니까 우리 팀이 기간 안에 만들 수 있는 범위로 정해요.
+
+📅 제출 일정
+- 10/28(수)까지: 팀별 선정 아이디어 제출 (중간보고)
+- 11/1(일)까지: 공공서비스 직접개발 계획서 제출
+
+🗓 팀 내부 일정
+${TIMELINE.map(x=>`- ${x.d} ${x.t}${x.focus?" ★집중":""}`).join("\n")}
+(시험기간이라 10/26~27에 몰아서 해요. 그 전엔 아이디어 1개만!)
+
+💡 아이디어 올릴 때 채울 5가지
+① 누구를 위한 서비스인지 ② 어떤 불편을 해결하는지 ③ 기존 서비스보다 뭐가 나은지 ④ AI를 어디에 어떻게 쓰는지 ⑤ 실제 개발할 핵심 기능
+
+👥 역할
+${roleLines}
+
+아이디어 랩(분야 지도·뽑기·보드·투표) 링크에서 각자 1개 이상 올려 주세요!`;
+}
+$("#copyNotice").onclick=()=>copy(noticeText());
+
+/* 5. doc */
+let finalId=null;
+function renderDoc(){
+  const t=tally(),list=sorted();
+  if(!list.length){$("#rank").innerHTML=`<div class="note">보드에 아이디어가 올라오면 여기에 순위가 나와요.</div>`;$("#out").textContent="팀 보드에 아이디어를 먼저 올려 주세요.";return}
+  if(!finalId||!list.some(i=>i.id===finalId))finalId=list[0].id;
+  $("#rank").innerHTML=list.map(i=>`<label><input type="radio" name="final" value="${i.id}" ${i.id===finalId?"checked":""}><span>${esc(i.title)}</span><b>★ ${t[i.id]||0}</b></label>`).join("");
+  document.querySelectorAll("[name=final]").forEach(r=>r.onchange=()=>{finalId=r.value;renderDoc()});
+  const f=list.find(i=>i.id===finalId);const d=dom(f.domain);const c=f.checks||{};const x=f.draft||{};
+  const core=(f.core&&f.core.length)?f.core:(x.must||[]);
+  const checks=[c.data&&"사용할 데이터·API를 확인함",c.ai&&"AI가 핵심 역할을 맡음",c.scope&&"우리 팀이 3차 활동 기간 안에 구현 가능함"].filter(Boolean);
+  const blank="(작성 필요)";
+  let s=`팀명: ${TEAM} (팀장 ${LEADER} / ${MEMBERS.filter(m=>m!==LEADER).join(", ")})
+
+■ 1. 과제 개요
+- 개발과제명(가칭): ${f.title}
+- 과제 유형: ${f.type}
+- 서비스 형태: 웹서비스
+- AI 삽입 여부: 예 (기능 설명: ${f.ai}${f.aiHow?" — "+f.aiHow:""})
+- 사용 데이터 / API: ${f.data||blank}
+
+■ 2. 개발 아이디어
+[아이디어 제안]
+${list.map(i=>`- ${i.author} | ${i.title}: ${i.desc}`).join("\n")}
+
+[최종 아이디어]
+- 선택한 아이디어: ${f.title} (${d.name})
+- 선택한 이유: 팀 투표 ${t[f.id]||0}표로 가장 많은 지지를 받음${checks.length?". "+checks.join(", ")+".":"."} ${f.better?"기존 서비스와 비교해 "+f.better:""}
+
+[중간보고용 검토 5항목]
+① 누구를 위한 서비스: ${f.who||blank}
+② 해결할 불편: ${f.desc||blank}
+③ 기존 서비스 대비 개선점: ${f.better||blank}
+④ AI 활용 위치와 방법: ${f.aiHow||f.ai}
+⑤ 실제 개발할 핵심 기능: ${core.length?core.join(" / "):blank}
+
+■ 4. 서비스 개발 개요
+- 서비스명: ${x.name||f.title}
+- 서비스 소개: ${x.oneLine||f.desc}
+- 이용 대상: ${f.who||blank}
+- 주요 기능: ${core.length?core.join(" / "):blank}
+- 이용 흐름: ${(x.flow||[]).length?x.flow.join(" → "):"① → ② → ③ "+blank}
+
+■ 5. 상세 기능
+${core.length?core.map(m=>`- [필수] ${m}`).join("\n"):"- [필수] "+blank}
+${(x.optional||[]).length?x.optional.map(m=>`- [선택] ${m}`).join("\n"):"- [선택] "+blank}`;
+  if(x.existing||x.risk)s+=`
+
+■ 3. 기존 사례 조사 메모
+- ${x.existing||""}
+- 주의할 점: ${x.risk||""}`;
+  s+=`
+
+■ 실행계획 (역할·일정)
+${ROLES.map(r=>`- ${r.n}: ${plan.roles[r.k]||"미정"}`).join("\n")}
+${TIMELINE.map(x=>`- ${x.d} ${x.t}`).join("\n")}`;
+  $("#out").textContent=s;
+}
+$("#copyDoc").onclick=()=>copy($("#out").textContent);
+
+/* init */
+renderTiles();renderDetail();renderReels();renderResult();renderBoard();renderPlan();
+show((location.hash||"").slice(1)||"map");
+(async()=>{
+  const C=window.claude;
+  if(C?.use){[db,user]=await Promise.all([C.use("db"),C.use("user")])}
+  if(user){try{myId=await user.id();isOwner=await user.isOwner();writable=await user.can("data.write")}catch(e){}}
+  if(!db){localMode=true;$("#permNote").innerHTML=`<div class="banner">지금은 팀 보드에 연결되지 않아서, 올린 아이디어가 이 창에만 남고 팀원에게 보이지 않아요.</div>`;renderBoard();return}
+  if(writable===false)$("#permNote").innerHTML=`<div class="banner">보기 권한이라 아이디어를 올리거나 투표할 수 없어요. 이성준에게 편집 권한 초대를 요청해 주세요. 1·2단계는 그대로 쓸 수 있어요.</div>`;
+  $("#who").textContent=isOwner?"보드 주인으로 보는 중":"";
+  const rerender=()=>{renderBoard();if(!$("#p-doc").hidden)renderDoc()};
+  db.collection("ideas").onSnapshot(s=>{ideas=s.docs.map(x=>({id:x.id,...x.data()}));rerender()},
+    ()=>{$("#permNote").innerHTML=`<div class="banner">팀 보드 연결이 끊겼어요. 새로고침해 주세요.</div>`});
+  db.collection("votes").onSnapshot(s=>{votes={};s.docs.forEach(x=>votes[x.id]=x.data().picks||[]);rerender()},()=>{});
+  db.doc("plan/main").onSnapshot(s=>{if(s.exists){const v=s.data();plan={roles:v.roles||{},done:v.done||{}};renderPlan();if(!$("#p-doc").hidden)renderDoc()}},()=>{});
+})();
+</script>
