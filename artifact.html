@@ -120,6 +120,8 @@ button{cursor:pointer}
 .reel .win{min-height:64px;display:flex;align-items:center;font-weight:700;font-size:16px;line-height:1.35;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);padding:6px 0;overflow-wrap:anywhere}
 .reel.spinning .win{color:var(--muted);filter:blur(.4px)}
 .reel.locked{outline:2px solid var(--stamp)}
+.reel.off{background:var(--soft);outline:1.5px dashed var(--muted)}
+.reel.off .win{color:var(--muted);font-weight:600}
 .lock{border:1px solid var(--line);background:var(--paper);border-radius:4px;font-size:11.5px;padding:1px 8px}
 .reel.locked .lock{background:var(--stamp);border-color:var(--stamp);color:#fff}
 .reel select{width:100%;border:1px solid var(--line);border-radius:4px;background:var(--paper);font-size:12.5px;padding:3px}
@@ -150,7 +152,13 @@ button{cursor:pointer}
 .draft dl{margin:4px 0 0;display:grid;gap:4px;font-size:13px}
 .draft dt{font-weight:700;font-size:12px;color:var(--muted)}
 .draft dd{margin:0}
-.thinking{margin-top:14px;padding:14px;border:1px dashed var(--line);border-radius:8px;color:var(--muted);background:var(--card)}
+.pbox{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
+.pstep{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+.pstep b{flex:none;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:13px}
+.pstep h4{margin:0;font-size:15px}
+.pstep .note{margin:2px 0 0}
+.ptext{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:10px 12px;font-size:13px;line-height:1.6;resize:vertical;min-width:0}
+a.btn{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 
 /* board */
 .board-top{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:18px;align-items:start}
@@ -330,7 +338,7 @@ details.more .inner{display:grid;gap:10px;margin-top:10px}
   <!-- 2. SPIN -->
   <section id="p-spin" role="tabpanel" hidden>
     <div class="sec-head">
-      <div><h2>조합을 뽑아 보세요</h2><p>마음에 드는 칸은 고정하고 나머지만 다시 뽑을 수 있어요. 칸을 직접 고를 수도 있어요.</p></div>
+      <div><h2>조합을 뽑아 보세요</h2><p>마음에 드는 칸은 고정하고 나머지만 다시 뽑을 수 있어요. 칸을 직접 고르거나 "선택 안 함"으로 비워 AI에게 맡길 수도 있어요.</p></div>
     </div>
     <div class="machine">
       <div class="reels" id="reels"></div>
@@ -582,7 +590,7 @@ function renderDetail(){
    <p class="note" style="margin:6px 0 0">제공 여부·인증키·비용은 공공데이터포털(data.go.kr)에서 꼭 확인하세요.</p>
    <h4>아이디어 씨앗</h4>${d.seeds.map((s,i)=>`<div class="seed"><p>${s}</p><button class="link" data-seed="${i}">보드에 올리기</button></div>`).join("")}
    <div class="row"><button class="btn pri" id="toSpin">이 분야로 뽑기</button></div>`;
-  $("#toSpin").onclick=()=>{reels.domain.val=d.id;reels.domain.locked=true;renderReels();renderResult();show("spin")};
+  $("#toSpin").onclick=()=>{reels.domain.val=d.id;reels.domain.locked=true;reels.domain.off=false;renderReels();renderResult();show("spin")};
   el.querySelectorAll("[data-seed]").forEach(b=>b.onclick=()=>prefill({pain:d.seeds[+b.dataset.seed],domain:d.id,data:d.data[0][1]+" "+d.data[0][0]}));
 }
 $("#aigrid").innerHTML=AIS.map(a=>`<div class="aic"><b>${a.n}</b><p>${a.how}</p><span class="k">완료 기준 예: ${a.done}</span></div>`).join("");
@@ -597,38 +605,45 @@ const reels={
 };
 reels.data.val=dom("welfare").data[0][0];
 let ticketNo=store.get("axlab.ticket",0);
-function options(k){const d=dom(reels.domain.val);
+const isOn=k=>!reels[k].off;
+const allTargets=()=>[...new Set([...DOMAINS.flatMap(x=>x.targets),...GEN_TARGETS])];
+function options(k){const d=isOn("domain")?dom(reels.domain.val):null;
   if(k==="domain")return DOMAINS.map(x=>[x.id,x.name]);
-  if(k==="target")return [...new Set([...d.targets,...GEN_TARGETS])].map(x=>[x,x]);
+  if(k==="target")return (d?[...new Set([...d.targets,...GEN_TARGETS])]:allTargets()).map(x=>[x,x]);
   if(k==="sit")return SITUATIONS.map(x=>[x,x]);
-  if(k==="data")return d.data.map(x=>[x[0],x[0]+" · "+x[1]]);
+  if(k==="data")return (d?d.data:DOMAINS.flatMap(x=>x.data)).map(x=>[x[0],x[0]+" · "+x[1]]);
   if(k==="ai")return AIS.map(x=>[x.n,x.n]);}
 function label(k,v){return k==="domain"?dom(v).name:v}
 function renderReels(){
-  const d=dom(reels.domain.val);if(!d.data.some(x=>x[0]===reels.data.val))reels.data.val=d.data[0][0];
-  $("#reels").innerHTML=Object.entries(reels).map(([k,r])=>`<div class="reel${r.locked?" locked":""}" id="r-${k}">
-    <div class="lab"><span>${r.lab}</span><button class="lock" data-lock="${k}" aria-pressed="${r.locked}">${r.locked?"고정됨":"고정"}</button></div>
-    <div class="win" id="w-${k}">${esc(label(k,r.val))}</div>
-    <select id="s-${k}" aria-label="${r.lab} 직접 고르기"><option value="" selected>직접 고르기 ▾</option>${options(k).map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join("")}</select>
+  const d=dom(reels.domain.val);if(isOn("domain")&&!d.data.some(x=>x[0]===reels.data.val))reels.data.val=d.data[0][0];
+  $("#reels").innerHTML=Object.entries(reels).map(([k,r])=>`<div class="reel${r.off?" off":r.locked?" locked":""}" id="r-${k}">
+    <div class="lab"><span>${r.lab}</span>${r.off?`<button class="lock" data-on="${k}">다시 넣기</button>`:`<button class="lock" data-lock="${k}" aria-pressed="${r.locked}">${r.locked?"고정됨":"고정"}</button>`}</div>
+    <div class="win" id="w-${k}">${r.off?"선택 안 함":esc(label(k,r.val))}</div>
+    <select id="s-${k}" aria-label="${r.lab} 직접 고르기"><option value="" selected>직접 고르기 ▾</option><option value="__off">선택 안 함 (AI가 정하게)</option>${options(k).map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join("")}</select>
   </div>`).join("");
   document.querySelectorAll("[data-lock]").forEach(b=>b.onclick=()=>{const r=reels[b.dataset.lock];r.locked=!r.locked;renderReels()});
-  Object.keys(reels).forEach(k=>$("#s-"+k).onchange=e=>{if(!e.target.value)return;reels[k].val=e.target.value;reels[k].locked=true;renderReels();renderResult()});
+  document.querySelectorAll("[data-on]").forEach(b=>b.onclick=()=>{reels[b.dataset.on].off=false;renderReels();renderResult()});
+  Object.keys(reels).forEach(k=>$("#s-"+k).onchange=e=>{const v=e.target.value;if(!v)return;
+    if(v==="__off"){reels[k].off=true;reels[k].locked=false}else{reels[k].val=v;reels[k].off=false;reels[k].locked=true}
+    renderReels();renderResult()});
 }
 let spinning=false;
 $("#pull").onclick=async()=>{
   if(spinning)return;spinning=true;$("#pull").disabled=true;
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if(!reels.domain.locked)reels.domain.val=pick(DOMAINS).id;
-  const d=dom(reels.domain.val);
-  if(!reels.target.locked)reels.target.val=Math.random()<.7?pick(d.targets):pick(GEN_TARGETS);
-  if(!reels.sit.locked)reels.sit.val=pick(SITUATIONS);
-  if(!reels.data.locked||!d.data.some(x=>x[0]===reels.data.val))reels.data.val=pick(d.data)[0];
-  if(!reels.ai.locked)reels.ai.val=pick(AIS).n;
-  const keys=Object.keys(reels).filter(k=>!reels[k].locked);
+  const free=k=>isOn(k)&&!reels[k].locked;
+  if(free("domain"))reels.domain.val=pick(DOMAINS).id;
+  const d=isOn("domain")?dom(reels.domain.val):null;
+  if(free("target"))reels.target.val=d&&Math.random()<.7?pick(d.targets):pick(d?GEN_TARGETS:allTargets());
+  if(free("sit"))reels.sit.val=pick(SITUATIONS);
+  const dpool=d?d.data:DOMAINS.flatMap(x=>x.data);
+  if(isOn("data")&&(!reels.data.locked||!dpool.some(x=>x[0]===reels.data.val)))reels.data.val=pick(dpool)[0];
+  if(free("ai"))reels.ai.val=pick(AIS).n;
+  const keys=Object.keys(reels).filter(free);
   if(!reduce){
     await Promise.all(keys.map((k,i)=>new Promise(res=>{
       const el=$("#r-"+k),w=$("#w-"+k);el.classList.add("spinning");
-      const pool=k==="domain"?DOMAINS.map(x=>x.name):k==="target"?[...d.targets,...GEN_TARGETS]:k==="sit"?SITUATIONS:k==="data"?DOMAINS.flatMap(x=>x.data.map(y=>y[0])):AIS.map(x=>x.n);
+      const pool=k==="domain"?DOMAINS.map(x=>x.name):k==="target"?allTargets():k==="sit"?SITUATIONS:k==="data"?DOMAINS.flatMap(x=>x.data.map(y=>y[0])):AIS.map(x=>x.n);
       const iv=setInterval(()=>w.textContent=pick(pool),70);
       setTimeout(()=>{clearInterval(iv);el.classList.remove("spinning");w.textContent=label(k,reels[k].val);res()},450+i*230);
     })));
@@ -637,93 +652,116 @@ $("#pull").onclick=async()=>{
   renderReels();renderResult();$("#drafts").innerHTML="";
   spinning=false;$("#pull").disabled=false;
 };
-function combo(){const d=dom(reels.domain.val),ai=AIS.find(a=>a.n===reels.ai.val)||AIS[0];
-  const dd=d.data.find(x=>x[0]===reels.data.val)||d.data[0];
-  return{d,ai,dd,target:reels.target.val,sit:reels.sit.val};}
+/* 꺼 둔 칸(선택 안 함)은 null/""로 돌려준다 */
+function combo(){
+  const d=isOn("domain")?dom(reels.domain.val):null;
+  const pool=d?d.data:DOMAINS.flatMap(x=>x.data);
+  const dd=isOn("data")?(pool.find(x=>x[0]===reels.data.val)||pool[0]):null;
+  const ai=isOn("ai")?(AIS.find(a=>a.n===reels.ai.val)||AIS[0]):null;
+  return{d,ai,dd,target:isOn("target")?reels.target.val:"",sit:isOn("sit")?reels.sit.val:""};}
 function renderResult(){
   const {d,ai,dd,target,sit}=combo();
-  const hmw=`어떻게 하면 ${target}${jo(target,"이","가")} ${sit} 겪는 불편을 ${ai.n}${ro(ai.n)} 덜어줄 수 있을까?`;
+  const T=target||"사람들",A=ai?ai.n:"AI";
+  const hmwP=(t,a)=>`어떻게 하면 ${t}${jo(T,"이","가")} ${sit?sit+" ":""}겪는 불편을 ${a}${ai?ro(A):"로"} 덜어줄 수 있을까?`;
+  const hmw=hmwP(T,A);
+  const offs=Object.keys(reels).filter(k=>!isOn(k)).map(k=>reels[k].lab);
   $("#result").innerHTML=`<div class="ticket">
-    <div class="stub"><small>번호표</small><b>${String(ticketNo).padStart(3,"0")}</b><span class="seal sm" style="--dc:var(${d.c})">${d.code}</span></div>
+    <div class="stub"><small>번호표</small><b>${String(ticketNo).padStart(3,"0")}</b><span class="seal sm" style="--dc:var(${d?d.c:"--c8"})">${d?d.code:"자유"}</span></div>
     <div class="tbody">
-      <div class="hmw">어떻게 하면 <mark class="slot">${esc(target)}</mark>${jo(target,"이","가")} ${esc(sit)} 겪는 불편을 <mark class="slot">${esc(ai.n)}</mark>${ro(ai.n)} 덜어줄 수 있을까?</div>
-      <p class="sum">${esc(d.name)} · ${esc(dd[0])} (${esc(dd[1])}) 데이터를 바탕으로</p>
-      <div class="hint"><b>AI 구동 방식 힌트</b> · ${esc(ai.how)}</div>
+      <div class="hmw">${hmwP(target?`<mark class="slot">${esc(target)}</mark>`:"사람들",ai?`<mark class="slot">${esc(ai.n)}</mark>`:"AI")}</div>
+      <p class="sum">${d?esc(d.name):"분야 자유"} · ${dd?`${esc(dd[0])} (${esc(dd[1])}) 데이터를 바탕으로`:"데이터는 자유롭게"}</p>
+      ${offs.length?`<p class="note" style="margin:4px 0 0">선택 안 한 칸: ${offs.map(esc).join(", ")} → 프롬프트에서 AI가 정하도록 넘겨요.</p>`:""}
+      ${ai?`<div class="hint"><b>AI 구동 방식 힌트</b> · ${esc(ai.how)}</div>`:""}
       <div class="qs"><b>팀원에게 던질 질문</b><ol>
-        <li>${esc(target)}${jo(target,"은","는")} 지금 이 문제를 어떻게 해결하고 있나요? (전화, 지인, 포기?)</li>
+        <li>${target?esc(target)+jo(target,"은","는"):"이 서비스를 쓸 사람은"} 지금 이 문제를 어떻게 해결하고 있나요? (전화, 지인, 포기?)</li>
         <li>이미 있는 공공서비스는 무엇이고, 뭐가 불편한가요? (계획서 3번 기존 사례)</li>
         <li>AI를 빼면 이 서비스에서 안 되는 게 뭔가요? 없다면 AI 위치를 다시 잡아 보세요.</li>
         <li>3차 활동 기간 안에 필수 기능 2~3개로 만들 수 있나요?</li>
       </ol></div>
       <div class="row">
-        <button class="btn pri" id="aiDraft">AI로 아이디어 3개 구체화</button>
+        <button class="btn pri" id="aiDraft">AI로 구체화할 프롬프트 받기</button>
         <button class="btn" id="toBoard">이 조합 보드에 올리기</button>
         <button class="btn" id="copyHmw">질문 복사</button>
       </div>
     </div></div>`;
   $("#copyHmw").onclick=()=>copy(hmw);
-  $("#toBoard").onclick=()=>prefill({who:target,pain:`${sit} 불편을 겪는다.`,domain:d.id,ai:ai.n,aiHow:ai.how,data:dd[1]+" "+dd[0]});
+  $("#toBoard").onclick=()=>prefill({who:target,pain:sit?`${sit} 불편을 겪는다.`:"",domain:d?.id,ai:ai?.n,aiHow:ai?.how||"",data:dd?dd[1]+" "+dd[0]:""});
   $("#aiDraft").onclick=runDraft;
 }
-let draftCtl=null,lastDrafts=[];
-async function runDraft(){
-  const box=$("#drafts");const {d,ai,dd,target,sit}=combo();
-  const sample=mode==="claude"?await window.claude.use("sample"):null;
-  if(mode==="api"&&!apiAi){box.innerHTML=`<div class="thinking">AI 구체화 키가 아직 서버에 설정되지 않았어요. 위 질문으로 팀원들과 직접 아이디어를 넓혀 보세요.</div>`;return}
-  if(!sample&&mode!=="api"){box.innerHTML=`<div class="thinking">이 화면에서는 AI 구체화를 쓸 수 없어요. 위 질문으로 팀원들과 직접 아이디어를 넓혀 보세요.</div>`;return}
-  draftCtl?.abort();draftCtl=new AbortController();
-  box.innerHTML=`<div class="thinking">아이디어를 만드는 중이에요. 보통 20~40초 걸려요. <button class="link" id="stopD">멈추기</button></div>`;
-  $("#stopD").onclick=()=>draftCtl.abort();
-  const prompt=`당신은 대학생 팀의 공공서비스 기획을 돕는 멘토입니다.
+let lastDrafts=[];
+function draftPrompt(){
+  const {d,ai,dd,target,sit}=combo();const FREE="정하지 않음 —";
+  return `당신은 대학생 팀의 공공서비스 기획을 돕는 멘토입니다.
 아래 조합으로 "AI를 활용한 공공서비스" 아이디어 3개를 한국어로 제안하세요. 세 아이디어는 접근 방식이 서로 달라야 합니다.
 
-- 분야: ${d.name}
-- 대상: ${target}
-- 불편 상황: ${sit} 생기는 불편
-- 활용 데이터 후보: ${dd[0]} (${dd[1]}) — 필요하면 같은 분야의 다른 공공데이터(${d.data.map(x=>x[0]).join(", ")})도 사용 가능
-- AI 기능: ${ai.n} (${ai.how})
+- 분야: ${d?d.name:FREE+" 가장 알맞은 공공서비스 분야를 골라 주세요"}
+- 대상: ${target||FREE+" 불편이 가장 큰 이용자를 구체적으로 정해 주세요"}
+- 불편 상황: ${sit?sit+" 생기는 불편":FREE+" 실제로 자주 겪는 불편을 정해 주세요"}
+- 활용 데이터 후보: ${dd?`${dd[0]} (${dd[1]})`:FREE+" 공공데이터포털에서 실제로 받을 수 있는 데이터를 골라 주세요"}${d?` — 필요하면 같은 분야의 다른 공공데이터(${d.data.map(x=>x[0]).join(", ")})도 사용 가능`:""}
+- AI 기능: ${ai?`${ai.n} (${ai.how})`:FREE+" 서비스에 가장 필요한 AI 활용 방식을 정해 주세요"}
 
 제약:
-- 개발 경험이 다양한 대학생 5명 팀이 약 3~4주 안에 웹서비스로 실제 구현해 GitLab에 올릴 수 있는 범위
+- 개발 경험이 다양한 대학생 5명 팀이 약 3~4주 안에 웹서비스로 실제 구현해 공공 GitLab에 올릴 수 있는 범위
 - 공공데이터포털 등에서 무료로 받을 수 있는 데이터 위주, 개인정보 수집은 최소화
 - 필수 기능 2~3개, 선택 기능 1~2개
 - 기존 공공서비스 개선이면 무엇을 어떻게 개선하는지 분명히
+- 데이터 이름은 실제로 있는 공공데이터만 쓰고, 확실하지 않으면 "(확인 필요)"를 붙이기
 
-JSON 배열만 답하세요. 형식:
+답은 아래 형식의 JSON 배열 하나만 코드 블록에 담아 주세요. 설명 문장은 쓰지 마세요.
 [{"name":"서비스명","oneLine":"한 줄 소개","target":"누구를 위한 서비스인지 구체적으로","problem":"해결하려는 불편 한두 문장","type":"기존 공공서비스 개선 또는 신규 공공서비스 개발","existing":"비교 대상 기존 공공서비스와 그 한계","better":"기존 서비스 대비 개선점 한 문장","aiRole":"AI를 어디에, 어떻게 쓰는지 한 문장","data":"사용 데이터/API","must":["필수 기능: 입력→처리→출력 한 줄"],"optional":["선택 기능"],"flow":["① 단계","② 단계","③ 단계"],"risk":"구현 시 주의할 점 한 문장"}]`;
-  try{
-    const res=mode==="api"
-      ?(await call("POST","/draft",{domain:d.name,target,sit,data:dd[0],dataOrg:dd[1],otherData:d.data.map(x=>x[0]).join(", "),ai:ai.n,aiHow:ai.how},draftCtl.signal)).ideas
-      :await sample.json(prompt,{signal:draftCtl.signal,modelTier:"default"});
-    const arr=(Array.isArray(res)?res:[]).filter(x=>x&&x.name).slice(0,3);
-    if(!arr.length)throw{code:"invalid_json"};
-    lastDrafts=arr.map(x=>({...x,_domain:d.id,_ai:ai.n}));
-    box.innerHTML=`<div class="drafts">${lastDrafts.map((x,i)=>`<div class="draft">
+}
+function guessDomain(x){const t=JSON.stringify(x);let best=null,n=0;
+  for(const d of DOMAINS){const c=[d.name,...d.name.split("·"),...d.data.map(y=>y[0])].filter(w=>w&&t.includes(w)).length;if(c>n){n=c;best=d.id}}
+  return best||"welfare"}
+function runDraft(){
+  const box=$("#drafts");const prompt=draftPrompt();
+  box.innerHTML=`<div class="pbox">
+    <div class="pstep"><b>1</b><div><h4>프롬프트를 복사해서 쓰는 AI에 붙여 넣어요</h4><p class="note">ChatGPT, Claude, Gemini 등 아무거나 괜찮아요. 칸을 바꾸면 다시 눌러 새로 만드세요.</p></div></div>
+    <textarea class="ptext" id="pText" readonly rows="9" aria-label="AI용 프롬프트">${esc(prompt)}</textarea>
+    <div class="row"><button class="btn pri" id="pCopy">프롬프트 복사</button>
+      <a class="btn" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a>
+      <a class="btn" href="https://claude.ai/new" target="_blank" rel="noopener">Claude</a>
+      <a class="btn" href="https://gemini.google.com/" target="_blank" rel="noopener">Gemini</a></div>
+    <div class="pstep" style="margin-top:18px"><b>2</b><div><h4>AI 답을 붙여 넣으면 카드로 정리해 드려요 (선택)</h4><p class="note">답 전체를 그대로 붙여 넣어도 돼요. 카드에서 바로 보드에 올릴 수 있어요.</p></div></div>
+    <textarea class="ptext" id="pAns" rows="5" placeholder="여기에 AI 답을 붙여 넣어 주세요" aria-label="AI 답 붙여넣기"></textarea>
+    <div class="row"><button class="btn pri" id="pParse">카드로 정리</button><span class="note" id="pMsg"></span></div>
+  </div><div id="draftCards"></div>`;
+  $("#pCopy").onclick=()=>copy(prompt);
+  $("#pText").onfocus=e=>e.target.select();
+  $("#pParse").onclick=()=>parseDrafts($("#pAns").value);
+  box.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function parseDrafts(text){
+  const {d,ai}=combo();let arr=null;
+  const t=String(text).replace(/```(?:json)?/gi,"");const i=t.indexOf("["),j=t.lastIndexOf("]");
+  if(i>=0&&j>i){try{arr=JSON.parse(t.slice(i,j+1))}catch(e){}}
+  arr=(Array.isArray(arr)?arr:[]).filter(x=>x&&typeof x==="object"&&x.name).slice(0,5);
+  if(!arr.length){$("#pMsg").textContent="JSON 부분을 찾지 못했어요. AI 답 전체를 그대로 붙여 넣어 주세요.";return}
+  $("#pMsg").textContent=`${arr.length}개를 정리했어요.`;
+  const s=v=>Array.isArray(v)?v.map(x=>String(x??"")):[];
+  lastDrafts=arr.map(x=>({...x,must:s(x.must),optional:s(x.optional),flow:s(x.flow),_domain:d?.id||guessDomain(x),_ai:ai?.n}));
+  const box=$("#draftCards");
+  box.innerHTML=`<div class="drafts">${lastDrafts.map((x,i)=>`<div class="draft">
       <span class="tg">${esc(x.type)}</span><h4>${esc(x.name)}</h4><p style="margin:0">${esc(x.oneLine)}</p>
       <dl><dt>누구를 위한</dt><dd>${esc(x.target)}</dd><dt>해결할 불편</dt><dd>${esc(x.problem)}</dd>
       <dt>기존 대비 개선</dt><dd>${esc(x.better)}</dd><dt>AI 활용</dt><dd>${esc(x.aiRole)}</dd>
-      <dt>핵심 기능 (필수)</dt><dd>${(x.must||[]).map(esc).join("<br>")}</dd>
-      <dt>선택 기능</dt><dd>${(x.optional||[]).map(esc).join("<br>")}</dd>
-      <dt>이용 흐름</dt><dd>${(x.flow||[]).map(esc).join(" → ")}</dd>
+      <dt>핵심 기능 (필수)</dt><dd>${x.must.map(esc).join("<br>")}</dd>
+      <dt>선택 기능</dt><dd>${x.optional.map(esc).join("<br>")}</dd>
+      <dt>이용 흐름</dt><dd>${x.flow.map(esc).join(" → ")}</dd>
       <dt>데이터</dt><dd>${esc(x.data)}</dd>
       <dt>비교할 기존 서비스</dt><dd>${esc(x.existing)}</dd>
       <dt>주의할 점</dt><dd>${esc(x.risk)}</dd></dl>
       <div class="row" style="margin-top:6px"><button class="btn sm pri" data-d="${i}">보드에 올리기</button></div></div>`).join("")}</div>
-      <p class="note">AI가 제안한 데이터 이름은 실제와 다를 수 있어요. 공공데이터포털에서 확인한 뒤 올려 주세요.</p>`;
-    box.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{const x=lastDrafts[+b.dataset.d];
-      prefill({title:x.name,who:x.target,pain:x.problem,better:x.better,aiHow:x.aiRole,core:(x.must||[]).join("\n"),domain:x._domain,ai:x._ai,data:x.data,type:x.type,draft:x})});
-  }catch(e){
-    const c=e?.name==="AbortError"?"cancelled":e?.code;
-    const m=c==="cancelled"?"멈췄어요.":c==="not_granted"?"AI 사용을 허용하지 않아서 구체화를 건너뛰었어요.":c==="rate_limited"?"요청이 많아요. 잠시 뒤 다시 눌러 주세요. (팀 전체 하루 사용량에도 상한이 있어요)":c==="ai_off"?"AI 구체화 키가 아직 서버에 설정되지 않았어요.":c==="ai_refused"?"AI가 이 조합에는 답하지 않았어요. 칸을 바꿔 다시 뽑아 보세요.":"아이디어를 정리하지 못했어요. 다시 눌러 보세요.";
-    box.innerHTML=`<div class="thinking">${m}</div>`;
-  }
+    <p class="note">AI가 제안한 데이터 이름은 실제와 다를 수 있어요. 공공데이터포털에서 확인한 뒤 올려 주세요.</p>`;
+  box.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{const x=lastDrafts[+b.dataset.d];
+    prefill({title:String(x.name),who:String(x.target||""),pain:String(x.problem||""),better:String(x.better||""),aiHow:String(x.aiRole||""),core:x.must.join("\n"),domain:x._domain,ai:x._ai,data:String(x.data||""),type:String(x.type||""),draft:x})});
 }
 
 /* 3. board */
 let db=null,user=null,myId=null,isOwner=false,writable=null;
 let ideas=[],votes={},localMode=false,filter="all",plan={roles:{},done:{}};
 /* 저장 방식: claude = Artifact 런타임 db, api = Cloudflare Worker + D1(/api), local = 이 브라우저 메모리 */
-let mode="local",apiAi=false,me=store.get("axlab.name","");
+let mode="local",me=store.get("axlab.name","");
 const API=(window.AXLAB_API||"")+"/api";
 async function call(method,path,body,signal){
   const r=await fetch(API+path,{method,signal,headers:body?{"content-type":"application/json"}:{},body:body?JSON.stringify(body):undefined});
@@ -737,7 +775,6 @@ const B={
 };
 let lastSnap={};
 function applyState(st){
-  apiAi=!!st.ai;
   const k1=JSON.stringify([st.ideas,st.votes]),k2=JSON.stringify(st.plan);
   if(k1!==lastSnap.board){lastSnap.board=k1;ideas=st.ideas||[];votes=st.votes||{};renderBoard();if(!$("#p-doc").hidden)renderDoc()}
   if(st.plan&&k2!==lastSnap.plan){lastSnap.plan=k2;plan={roles:st.plan.roles||{},done:st.plan.done||{}};renderPlan();if(!$("#p-doc").hidden)renderDoc()}

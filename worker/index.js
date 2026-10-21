@@ -1,13 +1,11 @@
 // 공공AX 아이디어 랩 — Cloudflare Worker
-// /api/* 는 D1 공유 저장 + AI 구체화, 나머지는 dist/ 정적 파일(ASSETS).
-import Anthropic from "@anthropic-ai/sdk";
+// /api/* 는 D1 공유 저장, 나머지는 dist/ 정적 파일(ASSETS).
 
 const MAX_IDEAS = 200;
 const MAX_BODY = 32 * 1024;
 const DOMAIN_IDS = ["welfare","health","traffic","safety","env","youth","edu","admin","culture","life","pet","house"];
 const CHECK_KEYS = ["data", "ai", "scope"];
 const ROLE_KEYS = ["pm", "user", "case", "func", "ai", "data", "ui", "tech", "risk", "doc", "present"];
-const MODEL = "claude-opus-5-5";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
@@ -58,7 +56,6 @@ async function getState(env) {
     votes: v,
     plan: p ? { roles: parse(p.roles, {}), done: parse(p.done, {}) } : null,
     members: members(env),
-    ai: !!env.ANTHROPIC_API_KEY,
   };
 }
 
@@ -132,80 +129,6 @@ async function setPlan(env, b) {
   return { ok: true };
 }
 
-/* AI 구체화 — 프롬프트는 서버에서 조립해서, 이 엔드포인트가 범용 프록시로 쓰이지 않게 한다 */
-const DRAFT_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  required: ["ideas"],
-  properties: {
-    ideas: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["name","oneLine","target","problem","type","existing","better","aiRole","data","must","optional","flow","risk"],
-        properties: {
-          name: { type: "string" }, oneLine: { type: "string" }, target: { type: "string" }, problem: { type: "string" },
-          type: { type: "string", enum: ["기존 공공서비스 개선", "신규 공공서비스 개발"] },
-          existing: { type: "string" }, better: { type: "string" }, aiRole: { type: "string" }, data: { type: "string" },
-          must: { type: "array", items: { type: "string" } }, optional: { type: "array", items: { type: "string" } },
-          flow: { type: "array", items: { type: "string" } }, risk: { type: "string" },
-        },
-      },
-    },
-  },
-};
-
-function draftPrompt(b) {
-  const s = k => str(b[k], 120);
-  return `당신은 대학생 팀의 공공서비스 기획을 돕는 멘토입니다.
-아래 조합으로 "AI를 활용한 공공서비스" 아이디어 3개를 한국어로 제안하세요. 세 아이디어는 접근 방식이 서로 달라야 합니다.
-
-- 분야: ${s("domain")}
-- 대상: ${s("target")}
-- 불편 상황: ${s("sit")} 생기는 불편
-- 활용 데이터 후보: ${s("data")} (${s("dataOrg")}) — 필요하면 같은 분야의 다른 공공데이터(${str(b.otherData, 300)})도 사용 가능
-- AI 기능: ${s("ai")} (${s("aiHow")})
-
-제약:
-- 개발 경험이 다양한 대학생 5명 팀이 약 3~4주 안에 웹서비스로 실제 구현해 공공 GitLab에 올릴 수 있는 범위
-- 공공데이터포털 등에서 무료로 받을 수 있는 데이터 위주, 개인정보 수집은 최소화
-- 필수 기능(must) 2~3개는 "입력→처리→출력" 한 줄씩, 선택 기능(optional) 1~2개, 이용 흐름(flow)은 ①②③ 단계
-- 기존 공공서비스 개선이면 무엇을 어떻게 개선하는지 분명히
-- existing에는 비교 대상 기존 공공서비스와 그 한계, risk에는 구현 시 주의할 점 한 문장`;
-}
-
-async function draft(env, b) {
-  if (!env.ANTHROPIC_API_KEY) throw new HttpError("ai_off", 503);
-  const cap = +env.AI_DAILY_LIMIT || 60;
-  const day = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); // KST 기준
-  const used = await env.DB.prepare("INSERT INTO ai_usage (day,n) VALUES (?,1) ON CONFLICT(day) DO UPDATE SET n=n+1 RETURNING n").bind(day).first();
-  if (used.n > cap) throw new HttpError("rate_limited", 429);
-
-  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-  let res;
-  try {
-    res = await client.beta.messages.create({
-      model: MODEL,
-      max_tokens: 16000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "medium", format: { type: "json_schema", schema: DRAFT_SCHEMA } },
-      messages: [{ role: "user", content: draftPrompt(b) }],
-    });
-  } catch (e) {
-    if (e instanceof Anthropic.RateLimitError) throw new HttpError("rate_limited", 429);
-    if (e instanceof Anthropic.APIError) { console.error("anthropic", e.status, e.message); throw new HttpError("ai_error", 502); }
-    throw e;
-  }
-  if (res.stop_reason === "refusal") throw new HttpError("ai_refused", 422);
-  const text = res.content.filter(c => c.type === "text").map(c => c.text).join("");
-  const out = parse(text, null);
-  const ideas = (out?.ideas || []).filter(x => x && x.name).slice(0, 3);
-  if (!ideas.length) throw new HttpError("invalid_json", 502);
-  return { ideas };
-}
-
 /* router */
 async function api(req, env, path) {
   const m = req.method;
@@ -217,7 +140,6 @@ async function api(req, env, path) {
   r = path.match(/^\/api\/votes\/(.{1,40})$/);
   if (r && m === "PUT") return setVotes(env, decodeURIComponent(r[1]), await body(req));
   if (path === "/api/plan" && m === "PUT") return setPlan(env, await body(req));
-  if (path === "/api/draft" && m === "POST") return draft(env, await body(req));
   throw new HttpError("not_found", 404);
 }
 

@@ -1,5 +1,5 @@
 {
-  // 공공AX 아이디어 랩: dist/(정적) + /api/*(D1 공유 저장, AI 구체화)
+  // 공공AX 아이디어 랩: dist/(정적) + /api/*(D1 공유 저장)
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "axxxl",
   "main": "worker/index.js",
@@ -19,9 +19,7 @@
     }
   ],
   "vars": {
-    "MEMBERS": "주연서,이성준,구민정,김동현,박수홍",
-    "AI_DAILY_LIMIT": "60"
+    "MEMBERS": "주연서,이성준,구민정,김동현,박수홍"
   },
   "observability": { "enabled": true }
-  // ANTHROPIC_API_KEY는 시크릿: npx wrangler secret put ANTHROPIC_API_KEY
 }
